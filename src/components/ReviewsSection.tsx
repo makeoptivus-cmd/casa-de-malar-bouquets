@@ -66,28 +66,6 @@ const ReviewsSection = () => {
 
   return (
     <section id="reviews" className="section-padding max-w-7xl mx-auto">
-      {/* Top row — buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8 }}
-        className="flex flex-wrap gap-4 mb-12"
-      >
-        <button
-          onClick={() => document.querySelector("#reviews")?.scrollIntoView({ behavior: "smooth" })}
-          className="btn-outline"
-        >
-          See Reviews
-        </button>
-        <button
-          onClick={() => document.querySelector("#craft")?.scrollIntoView({ behavior: "smooth" })}
-          className="btn-primary"
-        >
-          Book Bouquet
-        </button>
-      </motion.div>
-
       {/* Latest 3 reviews */}
       <div className="space-y-8 mb-16">
         {latestReviews.map((review, i) => (

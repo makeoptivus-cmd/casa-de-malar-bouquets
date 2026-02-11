@@ -44,9 +44,9 @@ const CraftSection = () => {
             before a single flower is touched.
           </p>
 
-          <button className="btn-primary">
-            Connect With Malar
-          </button>
+          <a href="tel:+1234567890" className="btn-primary inline-block">
+            Call Malar
+          </a>
         </motion.div>
       </div>
     </section>

@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import PortfolioPreviewSection from "@/components/PortfolioPreviewSection";
 import CraftSection from "@/components/CraftSection";
+import WriteReviewSection from "@/components/WriteReviewSection";
 import ReviewsSection from "@/components/ReviewsSection";
 import Footer from "@/components/Footer";
 
@@ -15,6 +16,7 @@ const HomePage = () => {
       <HowItWorksSection />
       <PortfolioPreviewSection />
       <CraftSection />
+      <WriteReviewSection />
       <ReviewsSection />
       <Footer />
     </div>
