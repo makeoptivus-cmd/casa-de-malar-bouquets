@@ -42,36 +42,13 @@ const Navbar = () => {
           Casa De Malar
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <ul className="flex items-center gap-8">
-            {navItems.map((item) =>
-              item.href.startsWith("/") ? (
-                <li key={item.label}>
-                  <Link to={item.href} className="nav-link font-body text-sm tracking-widest uppercase text-foreground/70 hover:text-foreground transition-colors duration-300">
-                    {item.label}
-                  </Link>
-                </li>
-              ) : (
-                <li key={item.label}>
-                  <button
-                    onClick={() => handleClick(item.href)}
-                    className="nav-link font-body text-sm tracking-widest uppercase text-foreground/70 hover:text-foreground transition-colors duration-300"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              )
-            )}
-          </ul>
-
-          <a
-            href="tel:+1234567890"
-            className="btn-primary flex items-center gap-2 py-2 px-6 text-xs"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            Call Malar
-          </a>
-        </div>
+        <a
+          href="tel:+1234567890"
+          className="btn-primary flex items-center gap-2 py-2 px-6 text-xs"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          Call Malar
+        </a>
       </div>
     </motion.nav>
   );
