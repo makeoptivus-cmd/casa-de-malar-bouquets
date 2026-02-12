@@ -5,7 +5,6 @@ import { addReview } from "@/lib/supabase";
 
 const WriteReviewSection = () => {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [experience, setExperience] = useState("");
@@ -14,15 +13,14 @@ const WriteReviewSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || rating === 0 || !experience.trim()) return;
+    if (!name.trim() || rating === 0 || !experience.trim()) return;
     
     setSubmitting(true);
     try {
-      await addReview(name, email, rating, experience);
+      await addReview(name, "", rating, experience);
       setSubmitted(true);
       // Reset form
       setName("");
-      setEmail("");
       setRating(0);
       setExperience("");
     } catch (error) {
@@ -74,21 +72,6 @@ const WriteReviewSection = () => {
               />
             </div>
 
-            {/* Email */}
-            <div>
-              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block">
-                Your Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                maxLength={100}
-                placeholder="Enter your email"
-                className="w-full bg-transparent border-b border-border/50 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
-              />
-            </div>
-
             {/* Star Rating */}
             <div>
               <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">
@@ -134,7 +117,7 @@ const WriteReviewSection = () => {
 
             <button
               type="submit"
-              disabled={!name.trim() || !email.trim() || rating === 0 || !experience.trim() || submitting}
+              disabled={!name.trim() || rating === 0 || !experience.trim() || submitting}
               className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? "Submitting..." : "Submit Review"}
