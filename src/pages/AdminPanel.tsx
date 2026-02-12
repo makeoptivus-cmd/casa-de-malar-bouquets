@@ -326,20 +326,7 @@ const AdminPanel = () => {
           <Card className="p-5 md:p-8 rounded-2xl border-border/40">
             <h2 className="text-xl font-serif mb-6">Add New Portfolio Item</h2>
             
-            {/* Setup Notice */}
-            <div className="mb-6 p-4 bg-primary/5 border border-primary/15 rounded-xl flex gap-3">
-              <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium mb-2">Quick Setup Guide</p>
-                <ol className="text-xs text-muted-foreground space-y-1 ml-4 list-decimal">
-                  <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="font-semibold underline text-primary">Supabase Dashboard</a></li>
-                  <li>Click <span className="font-semibold">"Storage"</span> in left sidebar</li>
-                  <li>Find <span className="font-semibold">"portfolio_images"</span> bucket</li>
-                  <li>Click the <span className="font-semibold">3 dots (⋯)</span> → <span className="font-semibold">"Make public"</span></li>
-                  <li>Done! Now upload photos below</li>
-                </ol>
-              </div>
-            </div>
+          
             
             <form onSubmit={handleAddPortfolioItem} className="space-y-4">
               {/* Upload Mode Toggle */}
