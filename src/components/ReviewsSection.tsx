@@ -1,62 +1,27 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-interface Review {
-  id: number;
-  name: string;
-  title: string;
-  story: string;
-  created_at: string;
-}
-
-// Placeholder data — Supabase-ready structure
-const reviews: Review[] = [
-  {
-    id: 1,
-    name: "Ananya R.",
-    title: "The Night I Said Sorry",
-    story: "I didn't know how to apologise. Malar created something that said everything I couldn't. When she opened the door, she cried before I could speak.",
-    created_at: "2025-12-15",
-  },
-  {
-    id: 2,
-    name: "James K.",
-    title: "A Proposal She Didn't Expect",
-    story: "I told Malar about our first date — a rainy afternoon at a café. The bouquet smelled like that day. She said yes before I finished the question.",
-    created_at: "2026-01-20",
-  },
-  {
-    id: 3,
-    name: "Priya M.",
-    title: "For My Mother, Miles Away",
-    story: "My mother lives across the ocean. Malar arranged jasmine and marigold — flowers from our garden at home. Amma said it felt like I was standing beside her.",
-    created_at: "2026-02-01",
-  },
-  {
-    id: 4,
-    name: "David L.",
-    title: "Birthday Morning Surprise",
-    story: "Waking up to a Casa De Malar arrangement changed her entire day. She carried one flower in her hair for a week.",
-    created_at: "2025-11-10",
-  },
-  {
-    id: 5,
-    name: "Sofia T.",
-    title: "Healing After Loss",
-    story: "Malar listened when I couldn't find words. The arrangement she created felt like a gentle hug in a vase.",
-    created_at: "2025-10-05",
-  },
-];
-
-const latestReviews = [...reviews]
-  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  .slice(0, 3);
-
-const remainingReviews = reviews.filter((r) => !latestReviews.find((lr) => lr.id === r.id));
+import { getReviews, Review } from "@/lib/supabase";
 
 const ReviewsSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadReviews();
+  }, []);
+
+  const loadReviews = async () => {
+    try {
+      const data = await getReviews();
+      setReviews(data);
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const scroll = (dir: "left" | "right") => {
     if (scrollRef.current) {
@@ -64,62 +29,95 @@ const ReviewsSection = () => {
     }
   };
 
+  const latestReviews = reviews.slice(0, 3);
+  const remainingReviews = reviews.slice(3);
+
   return (
     <section id="reviews" className="section-padding max-w-7xl mx-auto">
-      {/* Latest 3 reviews */}
-      <div className="space-y-8 mb-16">
-        {latestReviews.map((review, i) => (
-          <motion.div
-            key={review.id}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.8, delay: i * 0.15 }}
-            className="bg-card rounded-3xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/50"
-          >
-            <p className="font-serif text-xl md:text-2xl italic mb-4 leading-relaxed">
-              "{review.story}"
-            </p>
-            <div>
-              <p className="font-body text-sm font-bold">{review.name}</p>
-              <p className="font-body text-xs text-muted-foreground tracking-wide">{review.title}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Remaining reviews — horizontal scroll */}
-      {remainingReviews.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground">
-              More Stories
-            </p>
-            <div className="flex gap-2">
-              <button onClick={() => scroll("left")} className="p-2 rounded-full border border-border/50 hover:bg-card transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button onClick={() => scroll("right")} className="p-2 rounded-full border border-border/50 hover:bg-card transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div ref={scrollRef} className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-            {remainingReviews.map((review) => (
-              <div
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Loading reviews...</p>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No reviews yet. Be the first to share your story!</p>
+        </div>
+      ) : (
+        <>
+          {/* Latest 3 reviews */}
+          <div className="space-y-8 mb-16">
+            {latestReviews.map((review, i) => (
+              <motion.div
                 key={review.id}
-                className="min-w-[300px] max-w-[320px] bg-card rounded-3xl p-8 shadow-[var(--card-shadow)] border border-border/50 flex-shrink-0"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.8, delay: i * 0.15 }}
+                className="bg-card rounded-3xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/50"
               >
-                <p className="font-serif text-lg italic mb-4 leading-relaxed">
-                  "{review.story}"
+                <p className="font-serif text-xl md:text-2xl italic mb-4 leading-relaxed">
+                  "{review.message}"
                 </p>
-                <p className="font-body text-sm font-bold">{review.name}</p>
-                <p className="font-body text-xs text-muted-foreground">{review.title}</p>
-              </div>
+                <div>
+                  <p className="font-body text-sm font-bold">{review.name}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`w-4 h-4 rounded-full ${
+                          i < review.rating ? "bg-primary" : "bg-border/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+
+          {/* Remaining reviews — horizontal scroll */}
+          {remainingReviews.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground">
+                  More Stories
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => scroll("left")} title="Scroll left" className="p-2 rounded-full border border-border/50 hover:bg-card transition-colors">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => scroll("right")} title="Scroll right" className="p-2 rounded-full border border-border/50 hover:bg-card transition-colors">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div ref={scrollRef} className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                {remainingReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="min-w-[300px] max-w-[320px] bg-card rounded-3xl p-8 shadow-[var(--card-shadow)] border border-border/50 flex-shrink-0"
+                  >
+                    <p className="font-serif text-lg italic mb-4 leading-relaxed">
+                      "{review.message}"
+                    </p>
+                    <p className="font-body text-sm font-bold">{review.name}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`w-3 h-3 rounded-full ${
+                            i < review.rating ? "bg-primary" : "bg-border/30"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

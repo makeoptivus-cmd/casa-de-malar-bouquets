@@ -1,19 +1,36 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { addReview } from "@/lib/supabase";
 
 const WriteReviewSection = () => {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [experience, setExperience] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || rating === 0 || !experience.trim()) return;
-    // Supabase-ready: replace with supabase.from("reviews").insert(...)
-    setSubmitted(true);
+    if (!name.trim() || !email.trim() || rating === 0 || !experience.trim()) return;
+    
+    setSubmitting(true);
+    try {
+      await addReview(name, email, rating, experience);
+      setSubmitted(true);
+      // Reset form
+      setName("");
+      setEmail("");
+      setRating(0);
+      setExperience("");
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Error submitting review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -57,6 +74,21 @@ const WriteReviewSection = () => {
               />
             </div>
 
+            {/* Email */}
+            <div>
+              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block">
+                Your Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={100}
+                placeholder="Enter your email"
+                className="w-full bg-transparent border-b border-border/50 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
+              />
+            </div>
+
             {/* Star Rating */}
             <div>
               <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">
@@ -67,6 +99,7 @@ const WriteReviewSection = () => {
                   <button
                     key={star}
                     type="button"
+                    title={`Rate ${star} star${star !== 1 ? 's' : ''}`}
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
@@ -101,10 +134,10 @@ const WriteReviewSection = () => {
 
             <button
               type="submit"
-              disabled={!name.trim() || rating === 0 || !experience.trim()}
+              disabled={!name.trim() || !email.trim() || rating === 0 || !experience.trim() || submitting}
               className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Submit Review
+              {submitting ? "Submitting..." : "Submit Review"}
             </button>
           </form>
         )}
