@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Loader2, AlertCircle, Camera, ImageOff, ArrowLeft, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getPortfolioItems, PortfolioItem } from "@/lib/supabase";
@@ -46,25 +47,24 @@ const BouquetCard = ({ bouquet, index }: { bouquet: PortfolioItem; index: number
     <motion.div
       ref={ref}
       style={{ opacity, y, scale }}
-      className={`flex ${isLeft ? "justify-start" : "justify-end"}`}
+      className={`flex justify-center ${isLeft ? "md:justify-start" : "md:justify-end"}`}
     >
       <motion.div
-        whileHover={{ scale: 1.05, transition: { duration: 0.4 } }}
-        className="w-full max-w-md group cursor-pointer"
-        style={{ marginTop: index * 40 }}
+        whileHover={{ scale: 1.03, transition: { duration: 0.4 } }}
+        className="w-full max-w-[280px] sm:max-w-xs md:max-w-sm group cursor-pointer"
       >
-        <div className="photo-card overflow-hidden mb-4 transition-shadow duration-500 group-hover:shadow-[var(--glow-shadow)] bg-gradient-to-br from-gray-200 to-gray-300 aspect-[3/4] flex items-center justify-center">
+        <div className="photo-card overflow-hidden mb-4 transition-shadow duration-500 group-hover:shadow-[var(--glow-shadow)] bg-gradient-to-br from-gray-100 to-gray-200 aspect-[3/4] relative">
           {!imageLoaded && !imageError && (
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-gray-400 border-t-gray-600 rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-600 text-sm">Loading image...</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin mb-3" />
+              <p className="text-muted-foreground text-sm">Loading image…</p>
             </div>
           )}
           
           {imageError ? (
-            <div className="text-center p-4">
-              <p className="text-gray-600 text-sm font-medium">❌ Image Failed to Load</p>
-              <p className="text-gray-500 text-xs mt-1 break-words">{bouquet.image_url}</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <ImageOff className="w-8 h-8 text-muted-foreground mb-2" />
+              <p className="text-muted-foreground text-sm font-medium">Image unavailable</p>
             </div>
           ) : (
             <motion.img
@@ -72,18 +72,17 @@ const BouquetCard = ({ bouquet, index }: { bouquet: PortfolioItem; index: number
               src={bouquet.image_url}
               alt={bouquet.name}
               style={{ y: imageY, opacity: imageLoaded ? 1 : 0 }}
-              className="w-full h-full object-cover transition-opacity duration-300"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
               onLoad={handleImageLoad}
               onError={handleImageError}
-              crossOrigin="anonymous"
             />
           )}
         </div>
         <motion.div 
-          className="text-center"
+          className="text-center px-2"
           style={{ opacity }}
         >
-          <p className="font-serif text-xl md:text-2xl mb-2">{bouquet.name}</p>
+          <p className="font-serif text-xl md:text-2xl mb-1">{bouquet.name}</p>
           <p className="text-muted-foreground text-sm">{bouquet.description}</p>
         </motion.div>
       </motion.div>
@@ -124,50 +123,53 @@ const PreviousWorkPage = () => {
       <div className="grain-overlay" />
       <Navbar />
 
-      <div className="pt-32 pb-20 px-6 md:px-12 lg:px-24">
+      <div className="pt-24 md:pt-32 pb-16 md:pb-20 px-4 md:px-12 lg:px-24">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9 }}
-          className="text-center mb-20"
+          className="text-center mb-12 md:mb-20"
         >
           <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             Previous Work
           </p>
-          <h1 className="font-serif text-4xl md:text-6xl leading-snug">
+          <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl leading-snug">
             Moments We've <span className="italic">Crafted</span>
           </h1>
         </motion.div>
 
         {/* Staircase timeline */}
         {loading ? (
-          <div className="text-center py-20">
-            <div className="w-12 h-12 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading our portfolio...</p>
+          <div className="text-center py-20 flex flex-col items-center">
+            <Loader2 className="w-10 h-10 text-muted-foreground animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading our portfolio…</p>
           </div>
         ) : error ? (
-          <div className="max-w-2xl mx-auto p-8 bg-red-50 border border-red-200 rounded-lg text-center">
-            <p className="text-red-700 font-medium mb-2">❌ Error loading portfolio</p>
-            <p className="text-red-600 text-sm mb-4">{error}</p>
+          <div className="max-w-md mx-auto p-8 border border-destructive/30 rounded-2xl text-center bg-destructive/5">
+            <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+            <p className="text-destructive font-semibold mb-1">Error loading portfolio</p>
+            <p className="text-muted-foreground text-sm mb-5">{error}</p>
             <button
               onClick={() => {
                 setLoading(true);
                 loadBouquets();
               }}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-destructive text-destructive-foreground rounded-full text-sm font-medium hover:bg-destructive/90 transition-colors"
             >
+              <RefreshCw className="w-4 h-4" />
               Try Again
             </button>
           </div>
         ) : bouquets.length === 0 ? (
-          <div className="max-w-2xl mx-auto p-8 bg-blue-50 border border-blue-200 rounded-lg text-center">
-            <p className="text-blue-700 font-medium mb-2">📸 No portfolio items yet</p>
-            <p className="text-blue-600 text-sm mb-4">
-              Admin, go to <Link to="/admin" className="font-bold underline">/admin</Link> to add your first bouquet!
+          <div className="max-w-md mx-auto p-10 border border-border/60 rounded-2xl text-center">
+            <Camera className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-serif text-lg mb-1">No portfolio items yet</p>
+            <p className="text-muted-foreground text-sm">
+              Check back soon — new arrangements are on the way.
             </p>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto space-y-12 md:space-y-20">
+          <div className="max-w-3xl mx-auto space-y-10 md:space-y-16">
             {bouquets.map((bouquet, i) => (
               <BouquetCard key={bouquet.id} bouquet={bouquet} index={i} />
             ))}
@@ -181,8 +183,9 @@ const PreviousWorkPage = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-center mt-20"
         >
-          <Link to="/" className="btn-outline inline-block">
-            ← Back to Home
+          <Link to="/" className="btn-outline inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
           </Link>
         </motion.div>
       </div>

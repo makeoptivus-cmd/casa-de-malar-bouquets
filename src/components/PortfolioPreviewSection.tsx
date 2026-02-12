@@ -23,7 +23,7 @@ const PortfolioPreviewSection = () => {
   };
 
   return (
-    <section className="section-padding max-w-6xl mx-auto">
+    <section className="section-padding max-w-5xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -58,7 +58,7 @@ const PortfolioPreviewSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-10"
         >
           {items.map((item, index) => (
             <PortfolioCard key={item.id} item={item} index={index} />
@@ -94,15 +94,17 @@ const PortfolioCard = ({ item, index }: { item: PortfolioItem; index: number }) 
       transition={{ duration: 0.6, delay: index * 0.1 }}
       className="group cursor-pointer"
     >
-      <div className="aspect-square overflow-hidden rounded-lg mb-4 bg-gray-200">
+      <div className="aspect-[3/4] overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-gray-100 to-gray-200 relative">
         <img
           src={item.image_url}
           alt={item.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          crossOrigin="anonymous"
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
         />
       </div>
-      <h3 className="font-serif text-xl mb-2">{item.name}</h3>
+      <h3 className="font-serif text-lg md:text-xl mb-1">{item.name}</h3>
       <p className="text-muted-foreground text-sm line-clamp-2">{item.description}</p>
     </motion.div>
   );

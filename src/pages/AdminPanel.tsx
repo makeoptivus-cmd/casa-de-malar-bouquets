@@ -6,7 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Trash2, LogOut, AlertCircle, Upload } from 'lucide-react';
+import { Trash2, LogOut, AlertCircle, Upload, Camera, CheckCircle2, Info, Loader2, Image, XCircle, Link as LinkIcon, ImageOff } from 'lucide-react';
+
+const AdminImageCard = ({ src, alt }: { src: string; alt: string }) => {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="aspect-square overflow-hidden bg-muted flex items-center justify-center">
+      {failed ? (
+        <ImageOff className="w-8 h-8 text-muted-foreground" />
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover hover:scale-105 transition-transform"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
+  );
+};
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -23,18 +41,21 @@ const AdminPanel = () => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [uploadMode, setUploadMode] = useState<'url' | 'file'>('file');
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+  const [loginError, setLoginError] = useState(false);
 
   // Handle admin login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(false);
     if (password === adminPassword) {
       setIsAuthenticated(true);
       setPassword('');
       loadPortfolioItems();
     } else {
-      alert('Wrong password!');
+      setLoginError(true);
       setPassword('');
     }
   };
@@ -80,11 +101,11 @@ const AdminPanel = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
+        setStatusMsg({ type: 'error', text: 'File size must be less than 5MB' });
         return;
       }
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        setStatusMsg({ type: 'error', text: 'Please select an image file' });
         return;
       }
       setImageFile(file);
@@ -111,18 +132,17 @@ const AdminPanel = () => {
     // Validate inputs
     if (uploadMode === 'url') {
       if (!imageUrl || !name || !description) {
-        alert('Please fill all fields!');
+        setStatusMsg({ type: 'error', text: 'Please fill all fields' });
         return;
       }
-      // Validate URL format
       if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-        alert('❌ Invalid URL! Must start with http:// or https://');
+        setStatusMsg({ type: 'error', text: 'Invalid URL — must start with http:// or https://' });
         return;
       }
       finalImageUrl = imageUrl;
     } else {
       if (!imageFile || !name || !description) {
-        alert('Please fill all fields and select an image!');
+        setStatusMsg({ type: 'error', text: 'Please fill all fields and select an image' });
         return;
       }
     }
@@ -134,7 +154,7 @@ const AdminPanel = () => {
         try {
           const uploadedUrl = await uploadPortfolioImage(imageFile);
           if (!uploadedUrl) {
-            alert('❌ Failed to upload image to Supabase');
+            setStatusMsg({ type: 'error', text: 'Failed to upload image to Supabase' });
             setSubmitting(false);
             return;
           }
@@ -142,7 +162,7 @@ const AdminPanel = () => {
           console.log('✓ [FILE UPLOAD] Image uploaded to Supabase:', finalImageUrl);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          alert(`❌ Error uploading image: ${errorMessage}`);
+          setStatusMsg({ type: 'error', text: `Upload error: ${errorMessage}` });
           setSubmitting(false);
           return;
         }
@@ -150,12 +170,11 @@ const AdminPanel = () => {
 
       // Validate URL before saving
       if (!finalImageUrl || !finalImageUrl.startsWith('http')) {
-        alert('❌ Invalid image URL! Cannot save item.');
+        setStatusMsg({ type: 'error', text: 'Invalid image URL — cannot save item.' });
         setSubmitting(false);
         return;
       }
 
-      // Add portfolio item with the image URL
       console.log('📝 [ADMIN ADD ITEM] Saving to Supabase:', { finalImageUrl, name, description });
       const newItem = await addPortfolioItem(finalImageUrl, name, description);
       if (newItem) {
@@ -166,16 +185,16 @@ const AdminPanel = () => {
         setImagePreview('');
         setName('');
         setDescription('');
-        setUploadMode('url');
-        alert('✓ Portfolio item added successfully!');
+        setUploadMode('file');
+        setStatusMsg({ type: 'success', text: 'Portfolio item added successfully!' });
       } else {
         console.error('✗ [ADMIN ADD ITEM] Failed - no item returned');
-        alert('❌ Failed to add portfolio item!');
+        setStatusMsg({ type: 'error', text: 'Failed to add portfolio item' });
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('✗ [ADMIN ADD ITEM] Error:', errorMsg);
-      alert(`❌ Error adding portfolio item: ${errorMsg}`);
+      setStatusMsg({ type: 'error', text: `Error: ${errorMsg}` });
     } finally {
       setSubmitting(false);
     }
@@ -189,11 +208,11 @@ const AdminPanel = () => {
       const success = await deletePortfolioItem(id);
       if (success) {
         setPortfolioItems(portfolioItems.filter(item => item.id !== id));
-        alert('Portfolio item deleted successfully!');
+        setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
       }
     } catch (error) {
       console.error('Error deleting portfolio item:', error);
-      alert('Error deleting portfolio item!');
+      setStatusMsg({ type: 'error', text: 'Error deleting portfolio item' });
     }
   };
 
@@ -206,17 +225,29 @@ const AdminPanel = () => {
           className="w-full max-w-md px-6"
         >
           {!supabase && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-destructive/5 border border-destructive/20 rounded-xl flex gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-900 text-sm">Supabase Not Configured</p>
-                <p className="text-red-700 text-xs mt-1">Please update your .env.local file with Supabase credentials.</p>
+                <p className="font-semibold text-destructive text-sm">Supabase Not Configured</p>
+                <p className="text-muted-foreground text-xs mt-1">Please update your .env.local file with Supabase credentials.</p>
               </div>
             </div>
           )}
-          <Card className="p-8">
-            <h1 className="text-3xl font-bold mb-2 text-center">Admin Panel</h1>
-            <p className="text-muted-foreground text-center mb-6">Enter admin password to continue</p>
+          <Card className="p-8 rounded-2xl shadow-lg border-border/40">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <Camera className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-2xl font-serif mb-1 text-center">Admin Panel</h1>
+              <p className="text-muted-foreground text-sm text-center">Enter your password to continue</p>
+            </div>
+
+            {loginError && (
+              <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                <p className="text-destructive text-sm">Wrong password. Please try again.</p>
+              </div>
+            )}
             
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -224,7 +255,7 @@ const AdminPanel = () => {
                   type="password"
                   placeholder="Enter admin password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
                   className="w-full"
                 />
               </div>
@@ -239,23 +270,51 @@ const AdminPanel = () => {
   }
 
   return (
-    <section className="min-h-screen bg-background py-12 px-4">
+    <section className="min-h-screen bg-background py-8 md:py-12 px-3 md:px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-12"
+          className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 md:mb-12"
         >
           <div>
-            <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-muted-foreground">Manage your portfolio and content</p>
+            <h1 className="text-3xl font-serif mb-1">Admin Panel</h1>
+            <p className="text-muted-foreground text-sm">Manage your portfolio and content</p>
           </div>
           <Button variant="outline" onClick={handleLogout} className="gap-2">
             <LogOut className="w-4 h-4" />
             Logout
           </Button>
         </motion.div>
+
+        {/* Status Message */}
+        {statusMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-8 p-4 rounded-xl flex items-center gap-3 ${
+              statusMsg.type === 'success'
+                ? 'bg-primary/5 border border-primary/20'
+                : 'bg-destructive/5 border border-destructive/20'
+            }`}
+          >
+            {statusMsg.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+            ) : (
+              <XCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+            )}
+            <p className={`text-sm ${statusMsg.type === 'success' ? 'text-primary' : 'text-destructive'}`}>
+              {statusMsg.text}
+            </p>
+            <button
+              onClick={() => setStatusMsg(null)}
+              className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
 
         {/* Add New Portfolio Item */}
         <motion.div
@@ -264,24 +323,27 @@ const AdminPanel = () => {
           transition={{ delay: 0.1 }}
           className="mb-12"
         >
-          <Card className="p-8">
-            <h2 className="text-2xl font-bold mb-6">Add New Portfolio Item</h2>
+          <Card className="p-5 md:p-8 rounded-2xl border-border/40">
+            <h2 className="text-xl font-serif mb-6">Add New Portfolio Item</h2>
             
             {/* Setup Notice */}
-            <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg">
-              <p className="text-sm text-green-900 font-medium mb-2">📸 Quick Setup Guide</p>
-              <ol className="text-xs text-green-800 space-y-1 ml-4 list-decimal">
-                <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="font-bold underline text-green-700">Supabase Dashboard</a></li>
-                <li>Click <span className="font-bold">"Storage"</span> in left sidebar</li>
-                <li>Find <span className="font-bold">"portfolio_images"</span> bucket</li>
-                <li>Click the <span className="font-bold">3 dots (⋯)</span> → <span className="font-bold">"Make public"</span></li>
-                <li>Done! Now upload photos below 👇</li>
-              </ol>
+            <div className="mb-6 p-4 bg-primary/5 border border-primary/15 rounded-xl flex gap-3">
+              <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium mb-2">Quick Setup Guide</p>
+                <ol className="text-xs text-muted-foreground space-y-1 ml-4 list-decimal">
+                  <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="font-semibold underline text-primary">Supabase Dashboard</a></li>
+                  <li>Click <span className="font-semibold">"Storage"</span> in left sidebar</li>
+                  <li>Find <span className="font-semibold">"portfolio_images"</span> bucket</li>
+                  <li>Click the <span className="font-semibold">3 dots (⋯)</span> → <span className="font-semibold">"Make public"</span></li>
+                  <li>Done! Now upload photos below</li>
+                </ol>
+              </div>
             </div>
             
             <form onSubmit={handleAddPortfolioItem} className="space-y-4">
               {/* Upload Mode Toggle */}
-              <div className="flex gap-3 mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 bg-muted/40 border border-border/40 rounded-xl">
                 <button
                   type="button"
                   onClick={() => {
@@ -290,13 +352,14 @@ const AdminPanel = () => {
                     setImageUrl('');
                     setImagePreview('');
                   }}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                     uploadMode === 'url'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background text-muted-foreground hover:bg-background/80'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-background text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Paste URL (External)
+                  <LinkIcon className="w-4 h-4" />
+                  Paste URL
                 </button>
                 <button
                   type="button"
@@ -306,14 +369,14 @@ const AdminPanel = () => {
                     setImageFile(null);
                     setImagePreview('');
                   }}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                     uploadMode === 'file'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background text-muted-foreground hover:bg-background/80'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-background text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Upload className="w-4 h-4" />
-                  Upload Photo (Recommended)
+                  Upload Photo
                 </button>
               </div>
 
@@ -328,8 +391,9 @@ const AdminPanel = () => {
                     onChange={handleImageUrlChange}
                     required={uploadMode === 'url'}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    💡 Get free images: Upload to <a href="https://imgur.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Imgur.com</a>, copy URL, and paste here.
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Upload to <a href="https://imgur.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Imgur.com</a>, copy URL, and paste here.
                   </p>
                 </div>
               )}
@@ -357,8 +421,9 @@ const AdminPanel = () => {
                     </label>
                   </div>
                   {imageFile && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                      ✓ Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                    <div className="mt-2 p-2.5 bg-primary/5 border border-primary/15 rounded-lg text-sm text-primary flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                      Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
                     </div>
                   )}
                 </div>
@@ -366,16 +431,16 @@ const AdminPanel = () => {
 
               {/* Image Preview */}
               {imagePreview && (
-                <div className="border rounded-lg p-4 bg-muted/50">
+                <div className="border border-border/40 rounded-xl p-4 bg-muted/30">
                   <p className="text-xs font-medium mb-2">Preview:</p>
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
-                    className="w-32 h-32 object-cover rounded"
+                    className="w-32 h-32 object-cover rounded-lg"
                     onError={() => {
                       console.error('Preview failed for:', imagePreview);
                       if (uploadMode === 'url') {
-                        alert('Image URL is invalid or inaccessible');
+                        setStatusMsg({ type: 'error', text: 'Image URL is invalid or inaccessible' });
                         setImageUrl('');
                         setImagePreview('');
                       }
@@ -419,99 +484,43 @@ const AdminPanel = () => {
           </Card>
         </motion.div>
 
-        {/* DEBUG INFO SECTION */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-8"
-        >
-          <Card className="p-6 bg-blue-50 border-blue-200">
-            <h3 className="font-bold text-sm text-blue-900 mb-4">🔍 DATABASE DEBUG INFO</h3>
-            <div className="space-y-2 text-xs text-blue-800 font-mono">
-              <div>
-                <span className="font-bold">Supabase Status:</span>{' '}
-                {supabase ? '✓ CONNECTED' : '✗ NOT CONFIGURED'}
-              </div>
-              <div>
-                <span className="font-bold">Portfolio Items in DB:</span> {portfolioItems.length}
-              </div>
-              {portfolioItems.length > 0 && (
-                <div className="mt-3 p-3 bg-white rounded border border-blue-200 max-h-80 overflow-y-auto">
-                  <p className="font-bold mb-2">📋 Items in Database:</p>
-                  {portfolioItems.map((item, idx) => {
-                    const isValidUrl = item.image_url && 
-                      (item.image_url.startsWith('http') || item.image_url.startsWith('data:'));
-                    console.log(`Item ${idx}: name="${item.name}", url="${item.image_url}", valid=${isValidUrl}`);
-                    return (
-                      <div key={item.id} className={`mb-3 p-2 rounded text-xs border ${
-                        isValidUrl ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
-                      }`}>
-                        <p>
-                          <span className="font-bold">{idx + 1}.</span> {item.name}
-                          {isValidUrl ? ' ✓' : ' ❌'}
-                        </p>
-                        <p className="text-gray-700 break-all font-mono">
-                          🖼️ {item.image_url || '(EMPTY!)'}
-                        </p>
-                        {!isValidUrl && (
-                          <p className="text-red-600 font-bold mt-1">⚠️ INVALID OR MISSING URL!</p>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              {portfolioItems.length === 0 && (
-                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-700">
-                  ⚠️ Database is empty! Add items above.
-                </div>
-              )}
-              <div className="text-blue-600 mt-3 pt-2 border-t border-blue-200">
-                💡 Open browser console (F12) to see detailed logs
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
         {/* Portfolio Items List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="p-8">
-            <h2 className="text-2xl font-bold mb-6">Portfolio Items ({portfolioItems.length})</h2>
+          <Card className="p-5 md:p-8 rounded-2xl border-border/40">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-serif">Portfolio Items</h2>
+              <span className="text-sm text-muted-foreground">{portfolioItems.length} items</span>
+            </div>
             
             {loading ? (
-              <p className="text-muted-foreground">Loading...</p>
+              <div className="flex items-center justify-center gap-3 py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                <p className="text-muted-foreground text-sm">Loading…</p>
+              </div>
             ) : portfolioItems.length === 0 ? (
-              <p className="text-muted-foreground">No portfolio items yet. Add one above!</p>
+              <div className="text-center py-10">
+                <Image className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No portfolio items yet. Add one above!</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {portfolioItems.map((item, index) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                    className="border border-border/40 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    {/* Image Preview */}
-                    <div className="aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=Image+Not+Found';
-                        }}
-                      />
-                    </div>
+                    <AdminImageCard src={item.image_url} alt={item.name} />
 
                     {/* Item Details */}
                     <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2">{item.name}</h3>
+                      <h3 className="font-serif text-lg mb-1">{item.name}</h3>
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{item.description}</p>
                       <div className="flex gap-2">
                         <Button
