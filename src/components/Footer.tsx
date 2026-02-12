@@ -33,12 +33,12 @@ const Footer = () => {
             className="flex items-center gap-3 font-body text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
           >
             <Phone className="w-4 h-4" />
-            +1 (234) 567-890
+            +91 (234) 567-890
           </a>
 
           <div className="flex items-center gap-3 font-body text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
-            123 Blossom Lane, Florence, Italy
+            123 gst road, chennai, india 600001
           </div>
         </div>
 
