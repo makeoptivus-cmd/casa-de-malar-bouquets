@@ -19,7 +19,6 @@ const WriteReviewSection = () => {
     try {
       await addReview(name, "", rating, experience);
       setSubmitted(true);
-      // Reset form
       setName("");
       setRating(0);
       setExperience("");
@@ -39,27 +38,30 @@ const WriteReviewSection = () => {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.9 }}
       >
-        <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4 text-center">
-          Share Your Story
-        </p>
-        <h2 className="font-serif text-3xl md:text-5xl leading-snug mb-10 text-center">
-          Write a <span className="italic">Review</span>
-        </h2>
+        <div className="text-center mb-12">
+          <div className="line-accent mx-auto mb-6" />
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+            Share Your Story
+          </p>
+          <h2 className="font-serif text-4xl md:text-6xl leading-[1.1]">
+            Write a <span className="italic">Review</span>
+          </h2>
+        </div>
 
         {submitted ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card rounded-3xl p-10 shadow-[var(--card-shadow)] border border-border/50 text-center"
+            className="bg-card rounded-2xl p-12 shadow-[var(--card-shadow)] border border-border/40 text-center"
           >
-            <p className="font-serif text-2xl mb-2">Thank you, {name}.</p>
+            <p className="font-serif text-3xl mb-3">Thank you.</p>
             <p className="font-body text-muted-foreground">Your story means the world to us.</p>
           </motion.div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-card rounded-3xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/50 space-y-6">
+          <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-8 md:p-12 shadow-[var(--card-shadow)] border border-border/40 space-y-8">
             {/* Name */}
             <div>
-              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block">
+              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">
                 Your Name
               </label>
               <input
@@ -68,16 +70,16 @@ const WriteReviewSection = () => {
                 onChange={(e) => setName(e.target.value)}
                 maxLength={100}
                 placeholder="Enter your name"
-                className="w-full bg-transparent border-b border-border/50 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
+                className="w-full bg-transparent border-b border-border/40 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary transition-colors duration-300"
               />
             </div>
 
             {/* Star Rating */}
             <div>
-              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">
+              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4 block">
                 Your Rating
               </label>
-              <div className="flex gap-1">
+              <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
@@ -86,10 +88,10 @@ const WriteReviewSection = () => {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
-                    className="transition-transform duration-200 hover:scale-110"
+                    className="transition-all duration-200 hover:scale-125"
                   >
                     <Star
-                      className={`w-7 h-7 transition-colors duration-200 ${
+                      className={`w-7 h-7 transition-colors duration-300 ${
                         star <= (hoverRating || rating)
                           ? "fill-primary text-primary"
                           : "text-border"
@@ -102,7 +104,7 @@ const WriteReviewSection = () => {
 
             {/* Experience */}
             <div>
-              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block">
+              <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">
                 Your Experience
               </label>
               <textarea
@@ -111,14 +113,14 @@ const WriteReviewSection = () => {
                 maxLength={1000}
                 rows={4}
                 placeholder="Tell us about your moment..."
-                className="w-full bg-transparent border-b border-border/50 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors resize-none"
+                className="w-full bg-transparent border-b border-border/40 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary transition-colors duration-300 resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={!name.trim() || rating === 0 || !experience.trim() || submitting}
-              className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {submitting ? "Submitting..." : "Submit Review"}
             </button>

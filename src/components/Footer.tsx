@@ -3,11 +3,11 @@ import { Instagram, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="section-padding border-t border-border/50">
-      <div className="max-w-7xl mx-auto">
+    <footer className="px-6 md:px-12 lg:px-24 py-16 border-t border-border/30">
+      <div className="max-w-6xl mx-auto">
         {/* Top row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10 mb-12">
-          <Link to="/" className="font-serif text-2xl tracking-wide">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-14">
+          <Link to="/" className="font-serif text-3xl tracking-tight">
             Casa De Malar
           </Link>
 
@@ -17,7 +17,7 @@ const Footer = () => {
         </div>
 
         {/* Contact details */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-12">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-14">
           <a
             href="https://instagram.com/casademalar"
             target="_blank"
@@ -43,8 +43,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border/30 pt-6">
-          <p className="font-body text-xs text-muted-foreground">
+        <div className="border-t border-border/20 pt-6">
+          <p className="font-body text-xs text-muted-foreground/60">
             © {new Date().getFullYear()} Casa De Malar. All rights reserved.
           </p>
         </div>
