@@ -20,38 +20,47 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="section-padding max-w-7xl mx-auto">
-      <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-start">
-        {/* Left — text */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-        >
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            How It Works
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl leading-snug mb-8">
-            Every bouquet tells
-            <br />
-            <span className="italic">a story</span>
-          </h2>
+    <section id="how-it-works" className="section-padding max-w-6xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
+        className="mb-20"
+      >
+        <div className="line-accent mb-6" />
+        <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+          How It Works
+        </p>
+        <h2 className="font-serif text-4xl md:text-6xl leading-[1.1]">
+          Every bouquet tells
+          <br />
+          <span className="italic">a story</span>
+        </h2>
+      </motion.div>
 
-          <div className="space-y-8">
-            {steps.map((step) => (
-              <div key={step.number} className="flex gap-5">
-                <span className="font-serif text-3xl text-primary/40">{step.number}</span>
-                <div>
-                  <h3 className="font-serif text-xl mb-1">{step.title}</h3>
-                  <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>  
+      <div className="grid md:grid-cols-3 gap-6">
+        {steps.map((step, i) => (
+          <motion.div
+            key={step.number}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94], delay: i * 0.15 }}
+            whileHover={{ y: -6, transition: { duration: 0.3 } }}
+            className="group relative bg-card rounded-2xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/40 hover:border-primary/20 transition-colors duration-500"
+          >
+            <span className="font-serif text-6xl text-primary/15 absolute top-6 right-8">
+              {step.number}
+            </span>
+            <div className="relative">
+              <h4 className="font-serif text-xl md:text-2xl mb-3">{step.title}</h4>
+              <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                {step.description}
+              </p>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </section>
   );
