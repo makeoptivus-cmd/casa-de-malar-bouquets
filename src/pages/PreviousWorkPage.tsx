@@ -200,6 +200,11 @@ export const PreviousWorkPage = () => {
   const { scrollYProgress } = useScroll();
   const pageProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
+  // Scroll to top when page mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     loadBouquets();
   }, []);

@@ -51,30 +51,7 @@ const HowItWorksSection = () => {
               </div>
             ))}
           </div>
-        </motion.div>
-
-        {/* Right — floating cards */}
-        <div className="space-y-6">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.2 }}
-              whileHover={{ y: -4, transition: { duration: 0.3 } }}
-              className="bg-card rounded-3xl p-8 shadow-[var(--card-shadow)] border border-border/50"
-            >
-              <p className="font-body text-xs tracking-[0.2em] uppercase text-primary mb-2">
-                Step {step.number}
-              </p>
-              <h4 className="font-serif text-lg mb-2">{step.title}</h4>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                {step.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+        </motion.div>  
       </div>
     </section>
   );

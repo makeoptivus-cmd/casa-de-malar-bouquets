@@ -44,7 +44,7 @@ const CraftSection = () => {
             before a single flower is touched.
           </p>
 
-          <a href="tel:+1234567890" className="btn-primary inline-block">
+          <a href="tel:8825586566" className="btn-primary inline-block">
             Call Malar
           </a>
         </motion.div>
