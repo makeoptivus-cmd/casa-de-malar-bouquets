@@ -26,17 +26,17 @@ const HowItWorksSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.9, ease: "easeOut" }}
-        className="mb-20"
-      >
-        <div className="line-accent mb-6" />
-        <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
-          How It Works
-        </p>
-        <h2 className="font-serif text-4xl md:text-6xl leading-[1.1]">
-          Every bouquet tells
-          <br />
-          <span className="italic">a story</span>
-        </h2>
+        className="mb-20">
+
+          <div className="line-accent mb-6" />
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+            How It Works
+          </p>
+          <h2 className="font-serif text-4xl md:text-6xl leading-[1.1]">
+            Every bouquet tells
+            <br />
+            <span className="italic">a story</span>
+          </h2>
       </motion.div>
 
       <div className="grid md:grid-cols-3 gap-6">

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Truck } from 'lucide-react';
 import heroBouquet from "@/assets/hero-bouquet.jpg";
 
 const HeroSection = () => {
@@ -42,12 +43,20 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut", delay: 1 }}
         >
-          <button
-            onClick={() => document.querySelector("#craft")?.scrollIntoView({ behavior: "smooth" })}
-            className="bg-background/90 text-foreground px-10 py-4 rounded-full font-body text-xs tracking-[0.2em] uppercase transition-all duration-500 hover:bg-background hover:shadow-xl hover:scale-[1.02]"
-          >
-            Tell Us Your Story
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+            <button
+              onClick={() => document.querySelector("#craft")?.scrollIntoView({ behavior: "smooth" })}
+              className="bg-background/90 text-foreground px-10 py-4 rounded-full font-body text-xs tracking-[0.2em] uppercase transition-all duration-500 hover:bg-background hover:shadow-xl hover:scale-[1.02]"
+            >
+              Tell Us Your Story
+            </button>
+
+            {/* Delivery badge */}
+            <div className="mt-4 sm:mt-0 inline-flex items-center gap-3 bg-white/60 backdrop-blur-sm text-foreground rounded-full px-3 py-2 shadow-sm border border-border/20 text-sm">
+              <Truck className="w-4 h-4 text-foreground" />
+              <span className="font-semibold">Delivery available</span>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
