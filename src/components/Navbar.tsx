@@ -24,12 +24,7 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-12 py-5 md:py-6">
-        <Link
-          to="/"
-          className="font-serif text-2xl md:text-3xl tracking-tight text-foreground"
-        >
-          Casa De Malar
-        </Link>
+        <Link to="/" className="font-serif text-2xl md:text-3xl tracking-tight text-foreground">Casa De Malar</Link>
 
         <a
           href="tel:8825586566"

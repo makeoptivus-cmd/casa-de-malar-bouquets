@@ -3,11 +3,11 @@ import { Instagram, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="px-6 md:px-12 lg:px-24 py-16 border-t border-border/30">
-      <div className="max-w-6xl mx-auto">
+    <footer className="section-padding border-t border-border/50">
+      <div className="max-w-7xl mx-auto">
         {/* Top row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-14">
-          <Link to="/" className="font-serif text-3xl tracking-tight">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10 mb-12">
+          <Link to="/" className="font-serif text-2xl tracking-wide">
             Casa De Malar
           </Link>
 
@@ -17,7 +17,7 @@ const Footer = () => {
         </div>
 
         {/* Contact details */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-14">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-16 mb-12">
           <a
             href="https://instagram.com/casademalar"
             target="_blank"
@@ -29,22 +29,22 @@ const Footer = () => {
           </a>
 
           <a
-            href="tel:8825586566"
+            href="tel:+1234567890"
             className="flex items-center gap-3 font-body text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
           >
             <Phone className="w-4 h-4" />
-            8825586566
+            +91 (234) 567-890
           </a>
 
           <div className="flex items-center gap-3 font-body text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
-            S/No 61/1A, 1, GST Road, Potheri, Maraimalai Nagar - 603203
+            123 gst road, chennai, india 600001
           </div>
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border/20 pt-6">
-          <p className="font-body text-xs text-muted-foreground/60">
+        <div className="border-t border-border/30 pt-6">
+          <p className="font-body text-xs text-muted-foreground">
             © {new Date().getFullYear()} Casa De Malar. All rights reserved.
           </p>
         </div>

@@ -200,49 +200,48 @@ const AdminPanel = () => {
     }
   };
 
-  // Handle delete portfolio item
-  // - always delete the DB row when admin confirms
-  // - prompt for an extra password (adminPassword + "99") before deleting the photo from Supabase storage
+  // Handle delete portfolio item — require extra password BEFORE deleting photo + DB row
   const handleDeletePortfolioItem = async (id: string) => {
     const target = portfolioItems.find((p) => p.id === id);
     if (!confirm('Are you sure you want to delete this item?')) return;
 
+    // Prompt for confirmation password first (adminPassword + "99")
+    const promptMsg = 'Enter confirmation password to delete this item and its photo from storage (admin password + 99).\nCancel to abort.';
+    const confirmation = window.prompt(promptMsg, '');
+    if (confirmation === null || confirmation === '') {
+      setStatusMsg({ type: 'error', text: 'Deletion cancelled.' });
+      return;
+    }
+
+    if (confirmation !== `${adminPassword}99`) {
+      setStatusMsg({ type: 'error', text: 'Incorrect confirmation password — deletion aborted.' });
+      return;
+    }
+
     try {
+      // Password correct — attempt to remove storage file first (if present)
+      let storageRemoved = false;
+      if (target?.image_url) {
+        storageRemoved = await deleteStorageFileByPublicUrl(target.image_url);
+      }
+
+      // Delete DB row
       const success = await deletePortfolioItem(id);
       if (!success) {
-        setStatusMsg({ type: 'error', text: 'Failed to delete portfolio item.' });
+        setStatusMsg({ type: 'error', text: 'Failed to delete portfolio item from database.' });
         return;
       }
 
-      // Remove locally regardless
+      // Update local state
       setPortfolioItems((prev) => prev.filter((item) => item.id !== id));
-      setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
 
-      // Ask administrator if they want to delete the photo from storage
-      // Password required: adminPassword + '99'
-      const promptMsg = 'To also remove the photo from storage, enter the confirmation password (admin password + 99).\nLeave blank or Cancel to skip.';
-      const confirmation = window.prompt(promptMsg, '');
-
-      if (confirmation === null || confirmation === '') {
-        // user canceled or chose not to remove photo
-        return;
-      }
-
-      if (confirmation !== `${adminPassword}99`) {
-        setStatusMsg({ type: 'error', text: 'Incorrect confirmation password — photo was NOT removed from storage.' });
-        return;
-      }
-
-      // Password correct — attempt to remove the storage file (if any)
-      if (target?.image_url) {
-        const removed = await deleteStorageFileByPublicUrl(target.image_url);
-        if (removed) {
-          setStatusMsg({ type: 'success', text: 'Portfolio item and photo removed from storage.' });
-        } else {
-          setStatusMsg({ type: 'error', text: 'Portfolio item deleted but failed to remove photo from storage.' });
-        }
+      // Notify admin
+      if (storageRemoved) {
+        setStatusMsg({ type: 'success', text: 'Portfolio item and photo removed from storage.' });
+      } else if (target?.image_url) {
+        setStatusMsg({ type: 'success', text: 'Portfolio item deleted; photo was not removed from storage.' });
       } else {
-        setStatusMsg({ type: 'success', text: 'Portfolio item deleted. No photo to remove.' });
+        setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
       }
     } catch (error) {
       console.error('Error deleting portfolio item:', error);
@@ -343,6 +342,8 @@ const AdminPanel = () => {
             </p>
             <button
               onClick={() => setStatusMsg(null)}
+              title="Dismiss status message"
+              aria-label="Dismiss status message"
               className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
             >
               <XCircle className="w-4 h-4" />
@@ -367,6 +368,8 @@ const AdminPanel = () => {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 bg-muted/40 border border-border/40 rounded-xl">
                 <button
                   type="button"
+                  title="Paste URL"
+                  aria-label="Paste image URL"
                   onClick={() => {
                     setUploadMode('url');
                     setImageFile(null);
@@ -384,6 +387,8 @@ const AdminPanel = () => {
                 </button>
                 <button
                   type="button"
+                  title="Upload Photo"
+                  aria-label="Upload photo"
                   onClick={() => {
                     setUploadMode('file');
                     setImageUrl('');
