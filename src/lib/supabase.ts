@@ -237,3 +237,43 @@ export const uploadPortfolioImage = async (file: File): Promise<string | null> =
     throw new Error(errorMessage);
   }
 };
+
+// Delete a storage file given its public URL (returns true if removed)
+export const deleteStorageFileByPublicUrl = async (publicUrl: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured — cannot delete storage file');
+    return false;
+  }
+
+  try {
+    if (!publicUrl.includes('/storage/v1/object/public/')) {
+      // Not a Supabase storage URL — nothing to remove
+      console.warn('URL is not a Supabase storage public URL. Skipping removal:', publicUrl);
+      return false;
+    }
+
+    // Extract the bucket and file path from the public URL
+    // Example public URL: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<filepath>
+    const parts = publicUrl.split('/storage/v1/object/public/');
+    const pathAfter = parts[1];
+    if (!pathAfter) return false;
+
+    const firstSlash = pathAfter.indexOf('/');
+    if (firstSlash === -1) return false;
+
+    const bucket = pathAfter.substring(0, firstSlash);
+    const filePath = pathAfter.substring(firstSlash + 1);
+
+    const { error } = await supabase.storage.from(bucket).remove([filePath]);
+    if (error) {
+      console.error('Supabase storage deletion error:', error.message || error);
+      return false;
+    }
+
+    console.log('✓ [SUPABASE STORAGE] Removed file from', bucket, '/', filePath);
+    return true;
+  } catch (err) {
+    console.error('Exception while deleting storage file:', err);
+    return false;
+  }
+};

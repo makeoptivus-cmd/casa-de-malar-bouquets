@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getPortfolioItems, addPortfolioItem, deletePortfolioItem, uploadPortfolioImage, PortfolioItem, supabase } from '@/lib/supabase';
+import { getPortfolioItems, addPortfolioItem, deletePortfolioItem, deleteStorageFileByPublicUrl, uploadPortfolioImage, PortfolioItem, supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -201,14 +201,48 @@ const AdminPanel = () => {
   };
 
   // Handle delete portfolio item
+  // - always delete the DB row when admin confirms
+  // - prompt for an extra password (adminPassword + "99") before deleting the photo from Supabase storage
   const handleDeletePortfolioItem = async (id: string) => {
+    const target = portfolioItems.find((p) => p.id === id);
     if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
       const success = await deletePortfolioItem(id);
-      if (success) {
-        setPortfolioItems(portfolioItems.filter(item => item.id !== id));
-        setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
+      if (!success) {
+        setStatusMsg({ type: 'error', text: 'Failed to delete portfolio item.' });
+        return;
+      }
+
+      // Remove locally regardless
+      setPortfolioItems((prev) => prev.filter((item) => item.id !== id));
+      setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
+
+      // Ask administrator if they want to delete the photo from storage
+      // Password required: adminPassword + '99'
+      const promptMsg = 'To also remove the photo from storage, enter the confirmation password (admin password + 99).\nLeave blank or Cancel to skip.';
+      const confirmation = window.prompt(promptMsg, '');
+
+      if (confirmation === null || confirmation === '') {
+        // user canceled or chose not to remove photo
+        return;
+      }
+
+      if (confirmation !== `${adminPassword}99`) {
+        setStatusMsg({ type: 'error', text: 'Incorrect confirmation password — photo was NOT removed from storage.' });
+        return;
+      }
+
+      // Password correct — attempt to remove the storage file (if any)
+      if (target?.image_url) {
+        const removed = await deleteStorageFileByPublicUrl(target.image_url);
+        if (removed) {
+          setStatusMsg({ type: 'success', text: 'Portfolio item and photo removed from storage.' });
+        } else {
+          setStatusMsg({ type: 'error', text: 'Portfolio item deleted but failed to remove photo from storage.' });
+        }
+      } else {
+        setStatusMsg({ type: 'success', text: 'Portfolio item deleted. No photo to remove.' });
       }
     } catch (error) {
       console.error('Error deleting portfolio item:', error);
