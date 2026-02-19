@@ -1,7 +1,7 @@
 export const TRANSFORMER = {
     totalFrames: 50,
     folder: "/images/transformer-sequence/",
-    scrollLengthVH: 300,
+    scrollLengthVH: 200,
     poster: "/images/transformer-sequence/1.jpg",
     hud: {
         hero: {

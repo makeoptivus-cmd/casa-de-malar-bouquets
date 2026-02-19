@@ -12,23 +12,23 @@ const HeroSection: React.FC = () => {
   });
 
   // Text fades out as user scrolls deeper into the sequence
-  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const textY = useTransform(scrollYProgress, [0, 0.2], [0, -60]);
-  const textScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.96]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const textY = useTransform(scrollYProgress, [0, 0.15], [0, -50]);
+  const textScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.96]);
 
   // Smooth fade-out at the end for seamless parallax exit
-  const heroFadeOut = useTransform(scrollYProgress, [0.7, 0.95], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0.7, 0.95], [1, 0.92]);
-  const heroBlur = useTransform(scrollYProgress, [0.7, 0.95], [0, 8]);
+  const heroFadeOut = useTransform(scrollYProgress, [0.65, 0.9], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0.65, 0.9], [1, 0.92]);
+  const heroBlur = useTransform(scrollYProgress, [0.65, 0.9], [0, 8]);
   const heroFilter = useMotionTemplate`blur(${heroBlur}px)`;
 
   // End text fades IN on the final frames, then fades out with hero exit
-  const endTextOpacity = useTransform(scrollYProgress, [0.45, 0.6, 0.75, 0.9], [0, 1, 1, 0]);
-  const endTextY = useTransform(scrollYProgress, [0.45, 0.6], [40, 0]);
-  const endTextScale = useTransform(scrollYProgress, [0.45, 0.6], [0.96, 1]);
+  const endTextOpacity = useTransform(scrollYProgress, [0.35, 0.5, 0.65, 0.85], [0, 1, 1, 0]);
+  const endTextY = useTransform(scrollYProgress, [0.35, 0.5], [40, 0]);
+  const endTextScale = useTransform(scrollYProgress, [0.35, 0.5], [0.96, 1]);
 
   return (
-    <section ref={containerRef} className="relative h-[300vh]">
+    <section ref={containerRef} className="relative h-[200vh]">
       {/* Sticky viewport with smooth exit */}
       <motion.div
         style={{
