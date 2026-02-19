@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getPortfolioItems, PortfolioItem } from "@/lib/supabase";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const PortfolioPreviewSection = () => {
   const [items, setItems] = useState<PortfolioItem[]>([]);
@@ -23,7 +24,8 @@ const PortfolioPreviewSection = () => {
   };
 
   return (
-    <section className="section-padding max-w-6xl mx-auto overflow-hidden">
+    <section className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+      <BotanicalLeaves pattern={2} />
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}

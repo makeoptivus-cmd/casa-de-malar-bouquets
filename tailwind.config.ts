@@ -16,6 +16,8 @@ export default {
       fontFamily: {
         serif: ['"Instrument Serif"', 'Georgia', 'serif'],
         body: ['Outfit', 'sans-serif'],
+        heading: ['Orbitron', 'sans-serif'],
+        ui: ['Rajdhani', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

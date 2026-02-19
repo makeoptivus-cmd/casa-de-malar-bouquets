@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { addReview } from "@/lib/supabase";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const WriteReviewSection = () => {
   const [name, setName] = useState("");
@@ -31,7 +32,8 @@ const WriteReviewSection = () => {
   };
 
   return (
-    <section className="section-padding max-w-2xl mx-auto">
+    <section className="relative section-padding max-w-2xl mx-auto overflow-hidden">
+      <BotanicalLeaves pattern={4} />
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}

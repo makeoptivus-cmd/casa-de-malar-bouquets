@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const steps = [
   {
@@ -20,7 +21,10 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="section-padding max-w-6xl mx-auto">
+    <section id="how-it-works" className="relative z-10 bg-background section-padding overflow-hidden">
+      <BotanicalLeaves pattern={1} />
+
+      <div className="relative max-w-6xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -61,6 +65,7 @@ const HowItWorksSection = () => {
             </div>
           </motion.div>
         ))}
+      </div>
       </div>
     </section>
   );

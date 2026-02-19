@@ -1,64 +1,108 @@
-import { motion } from "framer-motion";
-import { Truck } from 'lucide-react';
-import heroBouquet from "@/assets/hero-bouquet.jpg";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform, useMotionTemplate } from "framer-motion";
+import { Truck } from "lucide-react";
+import TransformerScrollCanvas from "@/components/TransformerScrollCanvas";
+import { TRANSFORMER } from "@/data/transformerData";
 
-const HeroSection = () => {
+const HeroSection: React.FC = () => {
+  const containerRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  // Text fades out as user scrolls deeper into the sequence
+  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const textY = useTransform(scrollYProgress, [0, 0.2], [0, -60]);
+  const textScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.96]);
+
+  // Smooth fade-out at the end for seamless parallax exit
+  const heroFadeOut = useTransform(scrollYProgress, [0.7, 0.95], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0.7, 0.95], [1, 0.92]);
+  const heroBlur = useTransform(scrollYProgress, [0.7, 0.95], [0, 8]);
+  const heroFilter = useMotionTemplate`blur(${heroBlur}px)`;
+
+  // End text fades IN on the final frames, then fades out with hero exit
+  const endTextOpacity = useTransform(scrollYProgress, [0.45, 0.6, 0.75, 0.9], [0, 1, 1, 0]);
+  const endTextY = useTransform(scrollYProgress, [0.45, 0.6], [40, 0]);
+  const endTextScale = useTransform(scrollYProgress, [0.45, 0.6], [0.96, 1]);
+
   return (
-    <section className="relative min-h-screen flex items-end pb-20 md:pb-32 overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <motion.img
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 2, ease: "easeOut" }}
-          src={heroBouquet}
-          alt="Elegant bouquet of blush roses and peonies"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 px-6 md:px-12 lg:px-24 max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="line-accent mb-8"
+    <section ref={containerRef} className="relative h-[300vh]">
+      {/* Sticky viewport with smooth exit */}
+      <motion.div
+        style={{
+          opacity: heroFadeOut,
+          scale: heroScale,
+          filter: heroFilter,
+        }}
+        className="sticky top-0 h-screen w-full overflow-hidden will-change-transform origin-center"
+      >
+        {/* Scroll-driven frame sequence */}
+        <TransformerScrollCanvas
+          scrollYProgress={scrollYProgress}
+          totalFrames={TRANSFORMER.totalFrames}
+          imageFolderPath={TRANSFORMER.folder}
         />
 
-        <motion.h1
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.4 }}
-          className="font-serif text-5xl md:text-7xl lg:text-8xl text-primary-foreground leading-[1.05] mb-8"
-        >
-          Not just flowers.
-          <br />
-          <span className="italic">Moments that stay.</span>
-        </motion.h1>
+        {/* Gradient overlay for text legibility */}
+        <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-t from-black/70 via-black/20 to-black/5" />
 
+        {/* Hero text — fades out on scroll */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut", delay: 1 }}
+          style={{ opacity: textOpacity, y: textY, scale: textScale }}
+          className="absolute inset-0 z-[2] flex items-end pb-24 md:pb-32 pointer-events-none will-change-transform"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
-            <button
-              onClick={() => document.querySelector("#craft")?.scrollIntoView({ behavior: "smooth" })}
-              className="bg-background/90 text-foreground px-10 py-4 rounded-full font-body text-xs tracking-[0.2em] uppercase transition-all duration-500 hover:bg-background hover:shadow-xl hover:scale-[1.02]"
-            >
-              Tell Us Your Story
-            </button>
+          <div className="px-6 md:px-12 lg:px-24 max-w-4xl pointer-events-auto">
+            <div className="w-10 h-[1.5px] bg-white/50 mb-6" />
 
-            {/* Delivery badge */}
-            <div className="mt-4 sm:mt-0 inline-flex items-center gap-3 bg-white/60 backdrop-blur-sm text-foreground rounded-full px-3 py-2 shadow-sm border border-border/20 text-sm">
-              <Truck className="w-4 h-4 text-foreground" />
-              <span className="font-semibold">Delivery available</span>
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] text-white leading-[1.08] tracking-[-0.02em] mb-6">
+              Not just flowers.
+              <br />
+              <span className="italic text-white/90">Moments that stay.</span>
+            </h1>
+
+            <p className="font-body text-white/60 text-sm md:text-base max-w-md leading-relaxed mb-8 tracking-wide">
+              Handcrafted bouquets designed around your story.
+            </p>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-5">
+              <button
+                onClick={() =>
+                  document.querySelector("#craft")?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="bg-white text-black px-9 py-3.5 rounded-full font-body text-[11px] tracking-[0.2em] uppercase transition-all duration-500 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Tell Us Your Story
+              </button>
+
+              <div className="mt-4 sm:mt-0 inline-flex items-center gap-2.5 bg-white/10 backdrop-blur-md text-white/80 rounded-full px-4 py-2.5 border border-white/10 text-xs tracking-wide">
+                <Truck className="w-3.5 h-3.5" />
+                <span className="font-body font-medium">Delivery available</span>
+              </div>
             </div>
           </div>
         </motion.div>
-      </div>
+
+        {/* End text — fades IN on final frames */}
+        <motion.div
+          style={{ opacity: endTextOpacity, y: endTextY, scale: endTextScale }}
+          className="absolute inset-0 z-[3] flex items-center justify-center pointer-events-none will-change-transform"
+        >
+          <div className="text-center px-6 max-w-2xl">
+            <p className="font-body text-[10px] md:text-xs tracking-[0.35em] uppercase text-white/50 mb-4">
+              Crafted with love by Malar
+            </p>
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.1] tracking-[-0.01em] mb-5">
+              Every petal,{" "}
+              <span className="italic text-white/85">a promise.</span>
+            </h2>
+            <p className="font-body text-white/50 text-sm md:text-base leading-relaxed max-w-md mx-auto">
+              From our hands to your heart — bouquets that speak when words fall short.
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 };

@@ -13,6 +13,12 @@ const HomePage = () => {
       <div className="grain-overlay" />
       <Navbar />
       <HeroSection />
+
+      {/* Smooth gradient bridge from hero → content */}
+      <div className="relative z-10 -mt-[1px]">
+        <div className="h-32 md:h-48 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none" />
+      </div>
+
       <HowItWorksSection />
       <PortfolioPreviewSection />
       <CraftSection />

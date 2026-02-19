@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import craftImage from "@/assets/craft-florist.jpg";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const CraftSection = () => {
   return (
-    <section id="craft" className="section-padding max-w-6xl mx-auto">
+    <section id="craft" className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+      <BotanicalLeaves pattern={3} />
       <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         {/* Left — image */}
         <motion.div

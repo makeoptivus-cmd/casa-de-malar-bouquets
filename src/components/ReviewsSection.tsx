@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getReviews, Review } from "@/lib/supabase";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const ReviewsSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -33,7 +34,8 @@ const ReviewsSection = () => {
   const remainingReviews = reviews.slice(3);
 
   return (
-    <section id="reviews" className="section-padding max-w-6xl mx-auto">
+    <section id="reviews" className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+      <BotanicalLeaves pattern={5} />
       {loading ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground font-body text-sm">Loading reviews...</p>

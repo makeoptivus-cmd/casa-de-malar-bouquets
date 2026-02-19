@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&family=Orbitron:wght@400;700&family=Rajdhani:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -52,6 +52,14 @@
     --terracotta: 18 60% 45%;
     --sage: 82 30% 32%;
     --clay: 25 20% 12%;
+
+    /* Transformer hero design tokens */
+    --base-dark: #0b0b0b;
+    /* page background */
+    --accent-metal: #B71C1C;
+    /* deep red accent */
+    --neutral-carbon: #2a2a2a;
+    /* dark neutral for HUD rails */
   }
 
   .dark {
@@ -84,7 +92,12 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-serif;
   }
 }

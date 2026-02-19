@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Instagram, Phone, MapPin } from "lucide-react";
+import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const Footer = () => {
   return (
-    <footer className="section-padding border-t border-border/50">
+    <footer className="relative section-padding border-t border-border/50 overflow-hidden">
+      <BotanicalLeaves pattern={6} />
       <div className="max-w-7xl mx-auto">
         {/* Top row */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10 mb-12">
