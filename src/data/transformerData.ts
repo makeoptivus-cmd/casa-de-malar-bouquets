@@ -1,5 +1,5 @@
 export const TRANSFORMER = {
-    totalFrames: 50,
+    totalFrames: 60,
     folder: "/images/transformer-sequence/",
     scrollLengthVH: 200,
     poster: "/images/transformer-sequence/1.jpg",

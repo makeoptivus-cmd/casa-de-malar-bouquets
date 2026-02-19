@@ -21,7 +21,7 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="relative z-10 bg-background section-padding overflow-hidden">
+    <section id="how-it-works" className="relative z-10 bg-background section-padding !pt-12 md:!pt-16 overflow-hidden">
       <BotanicalLeaves pattern={1} />
 
       <div className="relative max-w-6xl mx-auto">

@@ -31,16 +31,16 @@ const Footer = () => {
           </a>
 
           <a
-            href="tel:+1234567890"
+            href="tel:8825586566"
             className="flex items-center gap-3 font-body text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
           >
             <Phone className="w-4 h-4" />
-            +91 (234) 567-890
+            88255 86566
           </a>
 
           <div className="flex items-center gap-3 font-body text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
-            123 gst road, chennai, india 600001
+            GST Rd, Pillayar Koil St, near Srm university, Chengalpattu, Tamil Nadu 603203
           </div>
         </div>
 

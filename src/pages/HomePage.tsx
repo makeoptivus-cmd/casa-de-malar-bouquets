@@ -16,7 +16,7 @@ const HomePage = () => {
 
       {/* Smooth gradient bridge from hero → content */}
       <div className="relative z-10 -mt-[1px]">
-        <div className="h-32 md:h-48 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none" />
+        <div className="h-16 md:h-24 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none" />
       </div>
 
       <HowItWorksSection />
