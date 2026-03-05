@@ -148,8 +148,8 @@ const AdminPanel = () => {
       return;
     }
 
-    if (!file.type.startsWith('video/')) {
-      setStatusMsg({ type: 'error', text: 'Please select a valid video file.' });
+    if (!file.type.startsWith('video/') && file.type !== 'image/gif') {
+      setStatusMsg({ type: 'error', text: 'Please select a valid video or GIF file.' });
       return;
     }
 
@@ -281,8 +281,8 @@ const AdminPanel = () => {
       return;
     }
 
-    if (!file.type.startsWith('video/')) {
-      setStatusMsg({ type: 'error', text: 'Please choose a valid video file.' });
+    if (!file.type.startsWith('video/') && file.type !== 'image/gif') {
+      setStatusMsg({ type: 'error', text: 'Please choose a valid video or GIF file.' });
       return;
     }
 
@@ -607,14 +607,14 @@ const AdminPanel = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Upload Video (Optional, 1 file)</label>
+                <label className="block text-sm font-medium mb-2">Upload Video/GIF (Optional, 1 file)</label>
                 <Input
                   type="file"
-                  accept="video/*"
+                  accept="video/*,image/gif"
                   onChange={handleVideoFileSelect}
                 />
                 {videoName && (
-                  <p className="text-xs text-muted-foreground mt-2">Selected video: {videoName}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Selected media: {videoName}</p>
                 )}
               </div>
 
@@ -707,11 +707,11 @@ const AdminPanel = () => {
                           </div>
 
                           <div>
-                            <label className="text-xs font-medium block mb-1">Replace/Add Video (Optional)</label>
-                            <Input type="file" accept="video/*" onChange={handleEditVideoFileSelect} />
+                            <label className="text-xs font-medium block mb-1">Replace/Add Video or GIF (Optional)</label>
+                            <Input type="file" accept="video/*,image/gif" onChange={handleEditVideoFileSelect} />
                             {editingVideoUrl && !editingNewVideoFile && (
                               <a href={editingVideoUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline mt-1 inline-block">
-                                View current video
+                                View current media
                               </a>
                             )}
                             {editingNewVideoFile && (

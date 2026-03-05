@@ -84,13 +84,14 @@ const ProductDetailPage = () => {
   const price = product.price || 0;
   const isFreeDelivery = price >= 2000;
   const deliveryGap = 2000 - price;
+  const isGifMedia = Boolean(product.video_url && /\.gif(?:$|[?#])/i.test(product.video_url));
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
+    <div className="bg-white min-h-screen flex flex-col overflow-x-hidden w-full">
       <Navbar />
 
       {/* ─── Main Content ─────────────────────────────────────────── */}
-      <main className="flex-1 pt-20 sm:pt-24 pb-16 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16 w-full box-border px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24">
         {/* Back button */}
         <motion.button
           initial={{ opacity: 0, x: -16 }}
@@ -104,38 +105,49 @@ const ProductDetailPage = () => {
         </motion.button>
 
         {/* ── Product grid ── */}
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-14 xl:gap-20">
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-14 xl:gap-20">
 
           {/* ── LEFT: Images ── */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-3 min-w-0 w-full"
           >
             {/* Main viewer */}
             <div className="relative w-full overflow-hidden rounded-2xl bg-gray-50 border border-gray-100">
               {isVideo && product.video_url ? (
-                <video
-                  src={product.video_url}
-                  className="w-full h-[300px] xs:h-[360px] sm:h-[440px] md:h-[500px] lg:h-[520px] xl:h-[580px] object-cover"
-                  controls
-                  autoPlay
-                  loop
-                  playsInline
-                />
+                isGifMedia ? (
+                  <img
+                    src={product.video_url}
+                    alt={`${product.name} GIF`}
+                    className="w-full h-[280px] sm:h-[420px] md:h-[480px] lg:h-[500px] xl:h-[560px] object-cover"
+                  />
+                ) : (
+                  <video
+                    src={product.video_url}
+                    className="w-full h-[280px] sm:h-[420px] md:h-[480px] lg:h-[500px] xl:h-[560px] object-cover"
+                    autoPlay
+                    loop
+                    playsInline
+                    muted
+                    disablePictureInPicture
+                    preload="metadata"
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
+                )
               ) : (
                 <img
                   src={selectedImage}
                   alt={product.name}
-                  className="w-full h-[300px] xs:h-[360px] sm:h-[440px] md:h-[500px] lg:h-[520px] xl:h-[580px] object-cover"
+                  className="w-full h-[280px] sm:h-[420px] md:h-[480px] lg:h-[500px] xl:h-[560px] object-cover"
                 />
               )}
             </div>
 
             {/* Thumbnails */}
             {(allImages.length > 1 || product.video_url) && (
-              <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-0.5 scroll-smooth no-scrollbar">
+              <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 scroll-smooth no-scrollbar w-full">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
@@ -159,13 +171,23 @@ const ProductDetailPage = () => {
                         : 'border-gray-200 hover:border-gray-400'
                     }`}
                   >
-                    <video
-                      src={product.video_url}
-                      className="w-full h-full object-cover opacity-70"
-                      muted
-                      playsInline
-                    />
-                    <PlayCircle className="absolute inset-0 m-auto w-7 h-7 text-white drop-shadow" />
+                    {isGifMedia ? (
+                      <img
+                        src={product.video_url}
+                        alt="GIF preview"
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                    ) : (
+                      <>
+                        <video
+                          src={product.video_url}
+                          className="w-full h-full object-cover opacity-70"
+                          muted
+                          playsInline
+                        />
+                        <PlayCircle className="absolute inset-0 m-auto w-7 h-7 text-white drop-shadow" />
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -177,7 +199,7 @@ const ProductDetailPage = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.18 }}
-            className="flex flex-col"
+            className="flex flex-col min-w-0 w-full"
           >
             {/* Name + code */}
             <div className="mb-4 sm:mb-5">
@@ -256,15 +278,15 @@ const ProductDetailPage = () => {
                   You may also like
                 </h3>
 
-                {/* Mobile: horizontal scroll */}
-                <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-1 no-scrollbar lg:hidden">
+                {/* Mobile/Tablet: horizontal scroll — hidden on lg+ */}
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1 no-scrollbar w-full lg:hidden">
                   {relatedProducts.map((related) => {
                     const img = related.image_urls?.[0] || related.image_url;
                     return (
                       <Link
                         key={related.id}
                         to={`/product/${related.id}`}
-                        className="flex-shrink-0 w-[140px] sm:w-[165px] rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-sm transition-all"
+                        className="flex-shrink-0 w-[120px] sm:w-[150px] rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-sm transition-all"
                       >
                         <img src={img} alt={related.name} className="w-full aspect-square object-cover" />
                         <div className="p-2.5">

@@ -254,8 +254,8 @@ export const uploadPortfolioMediaFile = async (
       throw new Error('Please select an image file (JPG, PNG, etc.)');
     }
 
-    if (type === 'video' && !file.type.startsWith('video/')) {
-      throw new Error('Please select a video file (MP4, MOV, etc.)');
+    if (type === 'video' && !file.type.startsWith('video/') && file.type !== 'image/gif') {
+      throw new Error('Please select a video or GIF file (MP4, MOV, GIF, etc.)');
     }
 
     if (type === 'image' && file.size > 5 * 1024 * 1024) {
