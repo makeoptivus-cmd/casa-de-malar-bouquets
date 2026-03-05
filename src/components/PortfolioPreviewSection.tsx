@@ -24,7 +24,7 @@ const PortfolioPreviewSection = () => {
   };
 
   return (
-    <section className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+    <section className="relative section-padding !py-8 md:!py-10 max-w-6xl mx-auto overflow-hidden">
       <BotanicalLeaves pattern={2} />
       {/* Header */}
       <motion.div
@@ -32,7 +32,7 @@ const PortfolioPreviewSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.9, ease: "easeOut" }}
-        className="text-center mb-16 md:mb-24"
+        className="text-center mb-10 md:mb-12"
       >
         <div className="line-accent mx-auto mb-6" />
         <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
@@ -63,7 +63,7 @@ const PortfolioPreviewSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="grid grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12"
+          className="grid grid-cols-3 gap-3 md:gap-4 lg:gap-6 mb-8"
         >
           {items.map((item, index) => (
             <PortfolioCard key={item.id} item={item} index={index} />
@@ -80,7 +80,7 @@ const PortfolioPreviewSection = () => {
         className="text-center"
       >
         <Link to="/previous-work" className="btn-outline inline-block">
-          See Previous Works →
+          See Our Collection →
         </Link>
       </motion.div>
     </section>
@@ -99,7 +99,7 @@ const PortfolioCard = ({ item, index }: { item: PortfolioItem; index: number }) 
       transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="group cursor-pointer"
     >
-      <Link to="/previous-work" className="block">
+      <Link to={`/product/${item.id}`} className="block">
         <motion.div 
           className="relative overflow-hidden rounded-xl md:rounded-2xl mb-3 md:mb-4 shadow-[var(--card-shadow)] hover:shadow-[var(--glow-shadow)] transition-shadow duration-500 aspect-[3/4]"
           whileHover={{ scale: 1.04, y: -10, rotate: 0, transition: { duration: 0.4, ease: "easeOut" } }}

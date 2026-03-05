@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getPortfolioItems, addPortfolioItem, deletePortfolioItem, deleteStorageFileByPublicUrl, uploadPortfolioImage, PortfolioItem, supabase } from '@/lib/supabase';
+import { getPortfolioItems, addPortfolioItem, deletePortfolioItem, deleteStorageFileByPublicUrl, uploadPortfolioMediaFile, updatePortfolioItem, PortfolioItem, supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Trash2, LogOut, AlertCircle, Upload, Camera, CheckCircle2, Info, Loader2, Image, XCircle, Link as LinkIcon, ImageOff } from 'lucide-react';
+import { Trash2, LogOut, AlertCircle, Upload, Camera, CheckCircle2, Loader2, Image, XCircle, ImageOff, Video, Pencil, Save } from 'lucide-react';
 
 const AdminImageCard = ({ src, alt }: { src: string; alt: string }) => {
   const [failed, setFailed] = useState(false);
@@ -34,17 +34,45 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
 
   // Form states
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoName, setVideoName] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [itemCode, setItemCode] = useState('0001');
   const [submitting, setSubmitting] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'url' | 'file'>('file');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [editingDescription, setEditingDescription] = useState('');
+  const [editingPrice, setEditingPrice] = useState('');
+  const [editingImageUrls, setEditingImageUrls] = useState<string[]>([]);
+  const [editingNewImageFiles, setEditingNewImageFiles] = useState<File[]>([]);
+  const [editingNewImagePreviews, setEditingNewImagePreviews] = useState<string[]>([]);
+  const [editingVideoUrl, setEditingVideoUrl] = useState<string | null>(null);
+  const [editingNewVideoFile, setEditingNewVideoFile] = useState<File | null>(null);
+  const [editingSubmitting, setEditingSubmitting] = useState(false);
 
   const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
   const [loginError, setLoginError] = useState(false);
+
+  const getItemPrimaryImage = (item: PortfolioItem) => item.image_urls?.[0] || item.image_url;
+
+  const getNextItemCode = (items: PortfolioItem[]) => {
+    const usedCodes = items
+      .map((item) => Number(item.item_code))
+      .filter((value) => Number.isInteger(value) && value >= 1 && value <= 9999);
+
+    if (usedCodes.length === 0) {
+      return '0001';
+    }
+
+    const next = Math.max(...usedCodes) + 1;
+    const bounded = next > 9999 ? 1 : next;
+    return String(bounded).padStart(4, '0');
+  };
 
   // Handle admin login
   const handleLogin = (e: React.FormEvent) => {
@@ -71,6 +99,7 @@ const AdminPanel = () => {
         console.warn('⚠️ [ADMIN] Database is EMPTY! No portfolio items found.');
       }
       setPortfolioItems(items);
+      setItemCode(getNextItemCode(items));
     } catch (error) {
       console.error('✗ [ADMIN] Error loading portfolio items:', error);
     } finally {
@@ -85,111 +114,118 @@ const AdminPanel = () => {
     setPortfolioItems([]);
   };
 
-  // Handle image URL change
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setImageUrl(url);
-    if (url) {
-      setImagePreview(url);
-    } else {
-      setImagePreview('');
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (files.length > 4) {
+      setStatusMsg({ type: 'error', text: 'You can upload maximum 4 images per profile.' });
+      e.target.value = '';
+      return;
     }
+
+    const hasInvalidType = files.some((file) => !file.type.startsWith('image/'));
+    if (hasInvalidType) {
+      setStatusMsg({ type: 'error', text: 'Only image files are allowed for image upload.' });
+      return;
+    }
+
+    const oversized = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setStatusMsg({ type: 'error', text: `Image ${oversized.name} is larger than 5MB.` });
+      return;
+    }
+
+    setImageFiles(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setStatusMsg({ type: 'error', text: 'File size must be less than 5MB' });
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        setStatusMsg({ type: 'error', text: 'Please select an image file' });
-        return;
-      }
-      setImageFile(file);
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) {
+      setVideoFile(null);
+      setVideoName('');
+      return;
     }
-  };
 
-  const handleClearFile = () => {
-    setImageFile(null);
-    setImagePreview('');
+    if (!file.type.startsWith('video/')) {
+      setStatusMsg({ type: 'error', text: 'Please select a valid video file.' });
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      setStatusMsg({ type: 'error', text: 'Video size must be less than 50MB.' });
+      return;
+    }
+
+    setVideoFile(file);
+    setVideoName(file.name);
   };
 
   // Handle add portfolio item
   const handleAddPortfolioItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    let finalImageUrl = imageUrl;
 
-    // Validate inputs
-    if (uploadMode === 'url') {
-      if (!imageUrl || !name || !description) {
-        setStatusMsg({ type: 'error', text: 'Please fill all fields' });
-        return;
-      }
-      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-        setStatusMsg({ type: 'error', text: 'Invalid URL — must start with http:// or https://' });
-        return;
-      }
-      finalImageUrl = imageUrl;
-    } else {
-      if (!imageFile || !name || !description) {
-        setStatusMsg({ type: 'error', text: 'Please fill all fields and select an image' });
-        return;
-      }
+    if (!name || !description || !price || imageFiles.length === 0) {
+      setStatusMsg({ type: 'error', text: 'Please fill name, description, price and upload at least 1 image.' });
+      return;
+    }
+
+    const parsedPrice = Number(price);
+    if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+      setStatusMsg({ type: 'error', text: 'Price must be a valid positive number.' });
+      return;
     }
 
     setSubmitting(true);
     try {
-      // If file upload, upload to Supabase first
-      if (uploadMode === 'file' && imageFile) {
-        try {
-          const uploadedUrl = await uploadPortfolioImage(imageFile);
-          if (!uploadedUrl) {
-            setStatusMsg({ type: 'error', text: 'Failed to upload image to Supabase' });
-            setSubmitting(false);
-            return;
-          }
-          finalImageUrl = uploadedUrl;
-          console.log('✓ [FILE UPLOAD] Image uploaded to Supabase:', finalImageUrl);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          setStatusMsg({ type: 'error', text: `Upload error: ${errorMessage}` });
+      const uploadedImageUrls: string[] = [];
+      for (const file of imageFiles) {
+        const uploadedUrl = await uploadPortfolioMediaFile(file, 'image');
+        if (!uploadedUrl) {
+          setStatusMsg({ type: 'error', text: 'Failed to upload one of the images.' });
+          setSubmitting(false);
+          return;
+        }
+        uploadedImageUrls.push(uploadedUrl);
+      }
+
+      let uploadedVideoUrl: string | null = null;
+      if (videoFile) {
+        uploadedVideoUrl = await uploadPortfolioMediaFile(videoFile, 'video');
+        if (!uploadedVideoUrl) {
+          setStatusMsg({ type: 'error', text: 'Failed to upload video.' });
           setSubmitting(false);
           return;
         }
       }
 
-      // Validate URL before saving
-      if (!finalImageUrl || !finalImageUrl.startsWith('http')) {
-        setStatusMsg({ type: 'error', text: 'Invalid image URL — cannot save item.' });
-        setSubmitting(false);
-        return;
-      }
+      console.log('📝 [ADMIN ADD ITEM] Saving to Supabase:', { uploadedImageUrls, name, description, price: parsedPrice });
+      const newItem = await addPortfolioItem({
+        image_url: uploadedImageUrls[0],
+        image_urls: uploadedImageUrls,
+        video_url: uploadedVideoUrl,
+        name,
+        description,
+        item_code: itemCode,
+        price: parsedPrice,
+      });
 
-      console.log('📝 [ADMIN ADD ITEM] Saving to Supabase:', { finalImageUrl, name, description });
-      const newItem = await addPortfolioItem(finalImageUrl, name, description);
       if (newItem) {
         console.log('✓ [ADMIN ADD ITEM] Success! Item saved:', newItem);
         setPortfolioItems([newItem, ...portfolioItems]);
-        setImageUrl('');
-        setImageFile(null);
-        setImagePreview('');
+        setImageFiles([]);
+        setImagePreviews([]);
+        setVideoFile(null);
+        setVideoName('');
         setName('');
         setDescription('');
-        setUploadMode('file');
+        setPrice('');
+        setItemCode(getNextItemCode([newItem, ...portfolioItems]));
         setStatusMsg({ type: 'success', text: 'Portfolio item added successfully!' });
       } else {
         console.error('✗ [ADMIN ADD ITEM] Failed - no item returned');
-        setStatusMsg({ type: 'error', text: 'Failed to add portfolio item' });
+        setStatusMsg({ type: 'error', text: 'Failed to add portfolio item. Please run DB migration for new fields.' });
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -197,6 +233,137 @@ const AdminPanel = () => {
       setStatusMsg({ type: 'error', text: `Error: ${errorMsg}` });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startEditingItem = (item: PortfolioItem) => {
+    setEditingItemId(item.id);
+    setEditingName(item.name);
+    setEditingDescription(item.description);
+    setEditingPrice(item.price ? String(item.price) : '');
+    setEditingImageUrls(item.image_urls?.length ? item.image_urls : [item.image_url]);
+    setEditingNewImageFiles([]);
+    setEditingNewImagePreviews([]);
+    setEditingVideoUrl(item.video_url || null);
+    setEditingNewVideoFile(null);
+  };
+
+  const handleEditImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const totalCount = editingImageUrls.length + files.length;
+    if (totalCount > 4) {
+      setStatusMsg({ type: 'error', text: 'Total images cannot exceed 4.' });
+      return;
+    }
+
+    const hasInvalidType = files.some((file) => !file.type.startsWith('image/'));
+    if (hasInvalidType) {
+      setStatusMsg({ type: 'error', text: 'Only image files are allowed.' });
+      return;
+    }
+
+    const oversized = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setStatusMsg({ type: 'error', text: `Image ${oversized.name} is larger than 5MB.` });
+      return;
+    }
+
+    setEditingNewImageFiles((prev) => [...prev, ...files]);
+    setEditingNewImagePreviews((prev) => [...prev, ...files.map((file) => URL.createObjectURL(file))]);
+  };
+
+  const handleEditVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (!file) {
+      setEditingNewVideoFile(null);
+      return;
+    }
+
+    if (!file.type.startsWith('video/')) {
+      setStatusMsg({ type: 'error', text: 'Please choose a valid video file.' });
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      setStatusMsg({ type: 'error', text: 'Video size must be less than 50MB.' });
+      return;
+    }
+
+    setEditingNewVideoFile(file);
+  };
+
+  const handleUpdatePortfolioItem = async (id: string) => {
+    if (!editingName || !editingDescription || !editingPrice) {
+      setStatusMsg({ type: 'error', text: 'Please fill name, description and price for update.' });
+      return;
+    }
+
+    const parsedPrice = Number(editingPrice);
+    if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+      setStatusMsg({ type: 'error', text: 'Price must be a valid positive number.' });
+      return;
+    }
+
+    const currentImageUrls = [...editingImageUrls];
+    if (currentImageUrls.length === 0 && editingNewImageFiles.length === 0) {
+      setStatusMsg({ type: 'error', text: 'At least one image is required.' });
+      return;
+    }
+
+    setEditingSubmitting(true);
+    try {
+      const uploadedImageUrls: string[] = [];
+      for (const file of editingNewImageFiles) {
+        const uploadedUrl = await uploadPortfolioMediaFile(file, 'image');
+        if (!uploadedUrl) {
+          setStatusMsg({ type: 'error', text: 'Failed to upload new image.' });
+          setEditingSubmitting(false);
+          return;
+        }
+        uploadedImageUrls.push(uploadedUrl);
+      }
+
+      const mergedImageUrls = [...currentImageUrls, ...uploadedImageUrls].slice(0, 4);
+
+      let finalVideoUrl = editingVideoUrl;
+      if (editingNewVideoFile) {
+        const uploadedVideoUrl = await uploadPortfolioMediaFile(editingNewVideoFile, 'video');
+        if (!uploadedVideoUrl) {
+          setStatusMsg({ type: 'error', text: 'Failed to upload updated video.' });
+          setEditingSubmitting(false);
+          return;
+        }
+        finalVideoUrl = uploadedVideoUrl;
+      }
+
+      const updated = await updatePortfolioItem(id, {
+        image_url: mergedImageUrls[0],
+        image_urls: mergedImageUrls,
+        video_url: finalVideoUrl,
+        name: editingName,
+        description: editingDescription,
+        price: parsedPrice,
+      });
+
+      if (!updated) {
+        setStatusMsg({ type: 'error', text: 'Failed to update item.' });
+        setEditingSubmitting(false);
+        return;
+      }
+
+      setPortfolioItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      setStatusMsg({ type: 'success', text: 'Portfolio item updated successfully.' });
+      setEditingItemId(null);
+      setEditingNewImageFiles([]);
+      setEditingNewImagePreviews([]);
+      setEditingNewVideoFile(null);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setStatusMsg({ type: 'error', text: `Update error: ${errorMsg}` });
+    } finally {
+      setEditingSubmitting(false);
     }
   };
 
@@ -219,10 +386,21 @@ const AdminPanel = () => {
     }
 
     try {
-      // Password correct — attempt to remove storage file first (if present)
-      let storageRemoved = false;
+      let storageRemovedCount = 0;
+      const mediaUrls = new Set<string>();
       if (target?.image_url) {
-        storageRemoved = await deleteStorageFileByPublicUrl(target.image_url);
+        mediaUrls.add(target.image_url);
+      }
+      target?.image_urls?.forEach((url) => mediaUrls.add(url));
+      if (target?.video_url) {
+        mediaUrls.add(target.video_url);
+      }
+
+      for (const mediaUrl of mediaUrls) {
+        const removed = await deleteStorageFileByPublicUrl(mediaUrl);
+        if (removed) {
+          storageRemovedCount += 1;
+        }
       }
 
       // Delete DB row
@@ -236,10 +414,10 @@ const AdminPanel = () => {
       setPortfolioItems((prev) => prev.filter((item) => item.id !== id));
 
       // Notify admin
-      if (storageRemoved) {
-        setStatusMsg({ type: 'success', text: 'Portfolio item and photo removed from storage.' });
-      } else if (target?.image_url) {
-        setStatusMsg({ type: 'success', text: 'Portfolio item deleted; photo was not removed from storage.' });
+      if (storageRemovedCount > 0) {
+        setStatusMsg({ type: 'success', text: `Portfolio item deleted with ${storageRemovedCount} media file(s) removed from storage.` });
+      } else if (mediaUrls.size > 0) {
+        setStatusMsg({ type: 'success', text: 'Portfolio item deleted; media was not removed from storage.' });
       } else {
         setStatusMsg({ type: 'success', text: 'Portfolio item deleted.' });
       }
@@ -303,13 +481,13 @@ const AdminPanel = () => {
   }
 
   return (
-    <section className="min-h-screen bg-background py-8 md:py-12 px-3 md:px-4">
+    <section className="min-h-screen bg-background py-5 md:py-8 px-3 md:px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 md:mb-12"
+          className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 md:mb-7"
         >
           <div>
             <h1 className="text-3xl font-serif mb-1">Admin Panel</h1>
@@ -326,7 +504,7 @@ const AdminPanel = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-8 p-4 rounded-xl flex items-center gap-3 ${
+            className={`mb-5 p-3 rounded-xl flex items-center gap-2.5 ${
               statusMsg.type === 'success'
                 ? 'bg-primary/5 border border-primary/20'
                 : 'bg-destructive/5 border border-destructive/20'
@@ -356,152 +534,93 @@ const AdminPanel = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-12"
+          className="mb-7"
         >
-          <Card className="p-5 md:p-8 rounded-2xl border-border/40">
-            <h2 className="text-xl font-serif mb-6">Add New Portfolio Item</h2>
+          <Card className="p-4 md:p-6 rounded-2xl border-border/40">
+            <h2 className="text-xl font-serif mb-4">Add New Portfolio Item</h2>
             
           
             
-            <form onSubmit={handleAddPortfolioItem} className="space-y-4">
-              {/* Upload Mode Toggle */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 bg-muted/40 border border-border/40 rounded-xl">
-                <button
-                  type="button"
-                  title="Paste URL"
-                  aria-label="Paste image URL"
-                  onClick={() => {
-                    setUploadMode('url');
-                    setImageFile(null);
-                    setImageUrl('');
-                    setImagePreview('');
-                  }}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                    uploadMode === 'url'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-background text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <LinkIcon className="w-4 h-4" />
-                  Paste URL
-                </button>
-                <button
-                  type="button"
-                  title="Upload Photo"
-                  aria-label="Upload photo"
-                  onClick={() => {
-                    setUploadMode('file');
-                    setImageUrl('');
-                    setImageFile(null);
-                    setImagePreview('');
-                  }}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                    uploadMode === 'file'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-background text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload Photo
-                </button>
+            <form onSubmit={handleAddPortfolioItem} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-2">Unique No (Auto)</label>
+                <Input type="text" value={itemCode} readOnly />
               </div>
-
-              {/* Image Input - URL Mode */}
-              {uploadMode === 'url' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Image URL</label>
-                  <Input
-                    type="url"
-                    placeholder="https://imgur.com/xxx.jpg or paste any image URL"
-                    value={imageUrl}
-                    onChange={handleImageUrlChange}
-                    required={uploadMode === 'url'}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                    <Info className="w-3 h-3" />
-                    Upload to <a href="https://imgur.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">Imgur.com</a>, copy URL, and paste here.
-                  </p>
-                </div>
-              )}
-
-              {/* Image Input - File Mode */}
-              {uploadMode === 'file' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Select Image from Gallery</label>
-                  <div className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer bg-muted/20">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="file-input"
-                      required={uploadMode === 'file'}
-                    />
-                    <label htmlFor="file-input" className="flex flex-col items-center gap-2 cursor-pointer">
-                      <Upload className="w-8 h-8 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Click to select an image</p>
-                        <p className="text-xs text-muted-foreground mt-1">or drag and drop</p>
-                        <p className="text-xs text-muted-foreground">Max 5MB • JPG, PNG, etc.</p>
-                      </div>
-                    </label>
-                  </div>
-                  {imageFile && (
-                    <div className="mt-2 p-2.5 bg-primary/5 border border-primary/15 rounded-lg text-sm text-primary flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                      Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Image Preview */}
-              {imagePreview && (
-                <div className="border border-border/40 rounded-xl p-4 bg-muted/30">
-                  <p className="text-xs font-medium mb-2">Preview:</p>
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-32 h-32 object-cover rounded-lg"
-                    onError={() => {
-                      console.error('Preview failed for:', imagePreview);
-                      if (uploadMode === 'url') {
-                        setStatusMsg({ type: 'error', text: 'Image URL is invalid or inaccessible' });
-                        setImageUrl('');
-                        setImagePreview('');
-                      }
-                    }}
-                  />
-                </div>
-              )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">Name</label>
                 <Input
                   type="text"
-                  placeholder="Bouquet name (e.g., Red Roses)"
+                  placeholder="Product name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2">Description</label>
                 <Textarea
-                  placeholder="Describe this bouquet arrangement..."
+                  placeholder="Describe this profile"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                disabled={
-                  submitting || 
-                  (uploadMode === 'url' && !imageUrl) || 
-                  (uploadMode === 'file' && !imageFile)
-                } 
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Price</label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="Enter price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload Images (1 to 4 images)</label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageFileSelect}
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">Select 1 or more images (max 4)</p>
+                {imageFiles.length > 0 && (
+                  <p className="text-xs text-primary mt-1">
+                    ✓ Selected {imageFiles.length} image(s)
+                  </p>
+                )}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2.5">
+                    {imagePreviews.map((preview, idx) => (
+                      <img key={`${preview}-${idx}`} src={preview} alt={`Preview ${idx + 1}`} className="w-full h-24 object-cover rounded-lg border" />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload Video (Optional, 1 file)</label>
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoFileSelect}
+                />
+                {videoName && (
+                  <p className="text-xs text-muted-foreground mt-2">Selected video: {videoName}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={submitting || imageFiles.length === 0}
                 className="w-full"
               >
                 {submitting ? 'Adding...' : 'Add Portfolio Item'}
@@ -516,8 +635,8 @@ const AdminPanel = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="p-5 md:p-8 rounded-2xl border-border/40">
-            <div className="flex items-center justify-between mb-6">
+          <Card className="p-4 md:p-6 rounded-2xl border-border/40">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-serif">Portfolio Items</h2>
               <span className="text-sm text-muted-foreground">{portfolioItems.length} items</span>
             </div>
@@ -533,7 +652,7 @@ const AdminPanel = () => {
                 <p className="text-muted-foreground text-sm">No portfolio items yet. Add one above!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 md:gap-5">
                 {portfolioItems.map((item, index) => (
                   <motion.div
                     key={item.id}
@@ -542,23 +661,102 @@ const AdminPanel = () => {
                     transition={{ delay: index * 0.05 }}
                     className="border border-border/40 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    <AdminImageCard src={item.image_url} alt={item.name} />
+                    <AdminImageCard src={getItemPrimaryImage(item)} alt={item.name} />
 
-                    {/* Item Details */}
-                    <div className="p-4">
-                      <h3 className="font-serif text-lg mb-1">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{item.description}</p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeletePortfolioItem(item.id)}
-                          className="flex-1 gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </Button>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-primary">Unique No: {item.item_code || '----'}</p>
+                        <p className="text-sm font-semibold">₹ {item.price ?? 0}</p>
                       </div>
+
+                      {editingItemId === item.id ? (
+                        <div className="space-y-3">
+                          <Input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="Name" />
+                          <Textarea value={editingDescription} onChange={(e) => setEditingDescription(e.target.value)} placeholder="Description" rows={3} />
+                          <Input type="number" min="1" step="0.01" value={editingPrice} onChange={(e) => setEditingPrice(e.target.value)} placeholder="Price" />
+
+                          <div>
+                            <p className="text-xs font-medium mb-2">Current Images ({editingImageUrls.length})</p>
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              {editingImageUrls.map((url) => (
+                                <div key={url} className="relative">
+                                  <img src={url} alt="Current" className="w-full h-20 object-cover rounded-md border" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingImageUrls((prev) => prev.filter((current) => current !== url))}
+                                    className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1"
+                                    title="Remove image"
+                                  >
+                                    <XCircle className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium block mb-1">Add More Images (Max total 4)</label>
+                            <Input type="file" accept="image/*" multiple onChange={handleEditImageFileSelect} />
+                            {editingNewImagePreviews.length > 0 && (
+                              <div className="grid grid-cols-2 gap-2 mt-2">
+                                {editingNewImagePreviews.map((preview, previewIndex) => (
+                                  <img key={`${preview}-${previewIndex}`} src={preview} alt="New preview" className="w-full h-20 object-cover rounded-md border" />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium block mb-1">Replace/Add Video (Optional)</label>
+                            <Input type="file" accept="video/*" onChange={handleEditVideoFileSelect} />
+                            {editingVideoUrl && !editingNewVideoFile && (
+                              <a href={editingVideoUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline mt-1 inline-block">
+                                View current video
+                              </a>
+                            )}
+                            {editingNewVideoFile && (
+                              <p className="text-xs text-muted-foreground mt-1">Selected: {editingNewVideoFile.name}</p>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleUpdatePortfolioItem(item.id)} disabled={editingSubmitting} className="flex-1 gap-2">
+                              <Save className="w-4 h-4" />
+                              {editingSubmitting ? 'Saving...' : 'Save'}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingItemId(null)} className="flex-1">
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <h3 className="font-serif text-lg mb-1">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                          <p className="text-xs text-muted-foreground">Images: {(item.image_urls?.length || (item.image_url ? 1 : 0))} {item.video_url ? '• Video: Yes' : '• Video: No'}</p>
+
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEditingItem(item)}
+                              className="flex-1 gap-2"
+                            >
+                              <Pencil className="w-4 h-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeletePortfolioItem(item.id)}
+                              className="flex-1 gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 ))}

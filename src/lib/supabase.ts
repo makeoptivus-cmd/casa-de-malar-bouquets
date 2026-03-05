@@ -17,8 +17,13 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
 export interface PortfolioItem {
   id: string;
   image_url: string;
+  image_urls?: string[] | null;
+  video_url?: string | null;
   name: string;
   description: string;
+  item_code?: string | null;
+  price?: number | null;
+  key_feature?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -67,11 +72,29 @@ export const getPortfolioItems = async (): Promise<PortfolioItem[]> => {
   }
 };
 
-export const addPortfolioItem = async (
-  image_url: string,
-  name: string,
-  description: string
-) => {
+interface PortfolioCreateInput {
+  image_url: string;
+  image_urls?: string[];
+  video_url?: string | null;
+  name: string;
+  description: string;
+  item_code?: string;
+  price?: number;
+  key_feature?: string;
+}
+
+interface PortfolioUpdateInput {
+  image_url?: string;
+  image_urls?: string[];
+  video_url?: string | null;
+  name?: string;
+  description?: string;
+  item_code?: string;
+  price?: number;
+  key_feature?: string;
+}
+
+export const addPortfolioItem = async (input: PortfolioCreateInput) => {
   if (!supabase) {
     console.error('❌ [SUPABASE] Not configured');
     alert('Supabase not configured');
@@ -79,10 +102,21 @@ export const addPortfolioItem = async (
   }
 
   try {
-    console.log('📤 [SUPABASE] Inserting portfolio item:', { image_url, name, description });
+    console.log('📤 [SUPABASE] Inserting portfolio item:', input);
     const { data, error } = await supabase
       .from('portfolio_items')
-      .insert([{ image_url, name, description, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }])
+      .insert([{
+        image_url: input.image_url,
+        image_urls: input.image_urls,
+        video_url: input.video_url ?? null,
+        name: input.name,
+        description: input.description,
+        item_code: input.item_code,
+        price: input.price,
+        key_feature: input.key_feature,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }])
       .select();
 
     if (error) {
@@ -91,6 +125,38 @@ export const addPortfolioItem = async (
     }
     console.log('✓ [SUPABASE] Item inserted successfully:', data?.[0]);
     return data?.[0];
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('❌ [SUPABASE] Exception:', msg);
+    return null;
+  }
+};
+
+export const updatePortfolioItem = async (id: string, input: PortfolioUpdateInput) => {
+  if (!supabase) {
+    console.error('❌ [SUPABASE] Not configured');
+    return null;
+  }
+
+  try {
+    const payload: PortfolioUpdateInput & { updated_at: string } = {
+      ...input,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from('portfolio_items')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ [SUPABASE] Update error:', error.message, error.details);
+      return null;
+    }
+
+    return data;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('❌ [SUPABASE] Exception:', msg);
@@ -174,29 +240,38 @@ export const addReview = async (
 };
 
 // Image Upload Function
-export const uploadPortfolioImage = async (file: File): Promise<string | null> => {
+export const uploadPortfolioMediaFile = async (
+  file: File,
+  type: 'image' | 'video'
+): Promise<string | null> => {
   if (!supabase) {
     alert('Supabase not configured');
     return null;
   }
 
   try {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (type === 'image' && !file.type.startsWith('image/')) {
       throw new Error('Please select an image file (JPG, PNG, etc.)');
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (type === 'video' && !file.type.startsWith('video/')) {
+      throw new Error('Please select a video file (MP4, MOV, etc.)');
+    }
+
+    if (type === 'image' && file.size > 5 * 1024 * 1024) {
       throw new Error('Image size must be less than 5MB');
     }
 
-    // Create unique filename with timestamp
+    if (type === 'video' && file.size > 50 * 1024 * 1024) {
+      throw new Error('Video size must be less than 50MB');
+    }
+
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const extension = file.name.split('.').pop() || 'jpg';
     const filename = `${timestamp}-${randomStr}.${extension}`;
-    const filepath = `portfolio/${filename}`;
+    const folder = type === 'image' ? 'portfolio/images' : 'portfolio/videos';
+    const filepath = `${folder}/${filename}`;
 
     console.log('Uploading file:', filepath);
 
@@ -276,4 +351,8 @@ export const deleteStorageFileByPublicUrl = async (publicUrl: string): Promise<b
     console.error('Exception while deleting storage file:', err);
     return false;
   }
+};
+
+export const uploadPortfolioImage = async (file: File): Promise<string | null> => {
+  return uploadPortfolioMediaFile(file, 'image');
 };

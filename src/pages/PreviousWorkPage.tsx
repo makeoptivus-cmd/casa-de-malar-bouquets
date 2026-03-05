@@ -76,19 +76,20 @@ const BouquetCard = ({
   // Grid layout
   if (layout === 'grid') {
     return (
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.6, delay: index * 0.08 }}
-        className="group cursor-pointer"
-      >
+      <Link to={`/product/${bouquet.id}`}>
         <motion.div
-          whileHover={isMobile ? {} : { y: -8, transition: { duration: 0.3 } }}
-          whileTap={{ scale: 0.98 }}
-          className="h-full flex flex-col"
+          ref={ref}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: index * 0.08 }}
+          className="group cursor-pointer"
         >
+          <motion.div
+            whileHover={isMobile ? {} : { y: -8, transition: { duration: 0.3 } }}
+            whileTap={{ scale: 0.98 }}
+            className="h-full flex flex-col"
+          >
           <div className="relative overflow-hidden mb-2 sm:mb-3 transition-all duration-500 group-hover:shadow-xl rounded-lg sm:rounded-xl bg-white aspect-[3/4] border border-gray-200">
             {!imageLoaded && !imageError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50">
@@ -130,23 +131,25 @@ const BouquetCard = ({
               {bouquet.description}
             </p>
           </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </Link>
     );
   }
 
   // Staircase layout
   return (
-    <motion.div
-      ref={ref}
-      style={{ opacity, y: smoothY, x: smoothX, rotate: smoothRotate, scale }}
-      className={`flex ${isLeft ? "justify-start" : "justify-end"} px-4 sm:px-0`}
-    >
+    <Link to={`/product/${bouquet.id}`}>
       <motion.div
-        whileHover={isMobile ? {} : { scale: 1.05, y: -10, transition: { duration: 0.4, type: "spring", stiffness: 300 } }}
-        whileTap={{ scale: 0.97 }}
-        className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[420px] group cursor-pointer"
+        ref={ref}
+        style={{ opacity, y: smoothY, x: smoothX, rotate: smoothRotate, scale }}
+        className={`flex ${isLeft ? "justify-start" : "justify-end"} px-4 sm:px-0`}
       >
+        <motion.div
+          whileHover={isMobile ? {} : { scale: 1.05, y: -10, transition: { duration: 0.4, type: "spring", stiffness: 300 } }}
+          whileTap={{ scale: 0.97 }}
+          className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[420px] group cursor-pointer"
+        >
         <div className="relative overflow-hidden mb-4 transition-all duration-500 group-hover:shadow-2xl rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 aspect-[3/4] shadow-lg">
           {!imageLoaded && !imageError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -187,7 +190,8 @@ const BouquetCard = ({
           </p>
         </motion.div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 };
 
@@ -248,7 +252,7 @@ export const PreviousWorkPage = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="font-body text-[10px] sm:text-xs tracking-[0.25em] sm:tracking-[0.3em] uppercase text-gray-500 mb-3 sm:mb-4"
           >
-            Previous Work
+            Our Collection
           </motion.p>
           
           <motion.h1 
@@ -561,7 +565,7 @@ export const PortfolioPreviewSection = () => {
             to="/previous-work"
             className="inline-flex items-center gap-2.5 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 border-2 border-gray-900 text-gray-900 rounded-full hover:bg-gray-900 hover:text-white transition-all duration-300 text-sm sm:text-base font-semibold shadow-md hover:shadow-xl hover:scale-105"
           >
-            <span>See Previous Works</span>
+            <span>See Our Collection</span>
             <span className="text-lg">→</span>
           </Link>
         </motion.div>

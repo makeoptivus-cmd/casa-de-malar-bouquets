@@ -4,9 +4,9 @@ import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const CraftSection = () => {
   return (
-    <section id="craft" className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+    <section id="craft" className="relative section-padding !py-8 md:!py-10 max-w-6xl mx-auto overflow-hidden">
       <BotanicalLeaves pattern={3} />
-      <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+      <div className="grid md:grid-cols-2 gap-7 md:gap-10 items-center">
         {/* Left — image */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
@@ -35,7 +35,7 @@ const CraftSection = () => {
           <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             The Craft
           </p>
-          <h2 className="font-serif text-4xl md:text-6xl leading-[1.1] mb-8">
+          <h2 className="font-serif text-4xl md:text-6xl leading-[1.1] mb-5">
             Handmade with
             <br />
             <span className="italic">intention</span>
@@ -45,7 +45,7 @@ const CraftSection = () => {
             you wish to share. At Casa De Malar, bouquets aren't assembled — they're 
             composed, like a piece of music written just for your moment.
           </p>
-          <p className="font-body text-muted-foreground leading-[1.8] mb-10">
+          <p className="font-body text-muted-foreground leading-[1.8] mb-6">
             Malar works personally with each client, listening to the story behind the occasion 
             before a single flower is touched.
           </p>

@@ -34,7 +34,7 @@ const ReviewsSection = () => {
   const remainingReviews = reviews.slice(3);
 
   return (
-    <section id="reviews" className="relative section-padding max-w-6xl mx-auto overflow-hidden">
+    <section id="reviews" className="relative section-padding !py-8 md:!py-10 max-w-6xl mx-auto overflow-hidden">
       <BotanicalLeaves pattern={5} />
       {loading ? (
         <div className="text-center py-12">
@@ -47,7 +47,7 @@ const ReviewsSection = () => {
       ) : (
         <>
           {/* Latest 3 reviews */}
-          <div className="space-y-6 mb-16">
+          <div className="space-y-4 mb-8">
             {latestReviews.map((review, i) => (
               <motion.div
                 key={review.id}
@@ -55,7 +55,7 @@ const ReviewsSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.8, delay: i * 0.12 }}
-                className="bg-card rounded-2xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/40"
+                className="bg-card rounded-2xl p-6 md:p-7 shadow-[var(--card-shadow)] border border-border/40"
               >
                 <p className="font-serif text-xl md:text-2xl italic mb-5 leading-relaxed">
                   "{review.message}"
@@ -80,7 +80,7 @@ const ReviewsSection = () => {
           {/* Remaining reviews — horizontal scroll */}
           {remainingReviews.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground">
                   More Stories
                 </p>

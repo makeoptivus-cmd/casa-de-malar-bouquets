@@ -32,7 +32,7 @@ const WriteReviewSection = () => {
   };
 
   return (
-    <section className="relative section-padding max-w-2xl mx-auto overflow-hidden">
+    <section className="relative section-padding !py-8 md:!py-10 max-w-2xl mx-auto overflow-hidden">
       <BotanicalLeaves pattern={4} />
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -40,7 +40,7 @@ const WriteReviewSection = () => {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.9 }}
       >
-        <div className="text-center mb-12">
+        <div className="text-center mb-7">
           <div className="line-accent mx-auto mb-6" />
           <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             Share Your Story
@@ -60,7 +60,7 @@ const WriteReviewSection = () => {
             <p className="font-body text-muted-foreground">Your story means the world to us.</p>
           </motion.div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-8 md:p-12 shadow-[var(--card-shadow)] border border-border/40 space-y-8">
+          <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 md:p-8 shadow-[var(--card-shadow)] border border-border/40 space-y-6">
             {/* Name */}
             <div>
               <label className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3 block">

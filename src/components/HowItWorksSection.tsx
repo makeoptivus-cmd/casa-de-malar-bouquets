@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import BotanicalLeaves from "@/components/BotanicalLeaves";
 
 const steps = [
   {
@@ -21,16 +20,14 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="relative z-10 bg-background section-padding !pt-12 md:!pt-16 overflow-hidden">
-      <BotanicalLeaves pattern={1} />
-
+    <section id="how-it-works" className="relative z-10 bg-background section-padding !py-8 md:!py-10 !pt-0 md:!pt-0 overflow-hidden">
       <div className="relative max-w-6xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.9, ease: "easeOut" }}
-        className="mb-20">
+        className="mb-10 md:mb-12">
 
           <div className="line-accent mb-6" />
           <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
@@ -43,7 +40,7 @@ const HowItWorksSection = () => {
           </h2>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5">
         {steps.map((step, i) => (
           <motion.div
             key={step.number}
@@ -52,7 +49,7 @@ const HowItWorksSection = () => {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94], delay: i * 0.15 }}
             whileHover={{ y: -6, transition: { duration: 0.3 } }}
-            className="group relative bg-card rounded-2xl p-8 md:p-10 shadow-[var(--card-shadow)] border border-border/40 hover:border-primary/20 transition-colors duration-500"
+            className="group relative bg-card rounded-2xl p-6 md:p-7 shadow-[var(--card-shadow)] border border-border/40 hover:border-primary/20 transition-colors duration-500"
           >
             <span className="font-serif text-6xl text-primary/15 absolute top-6 right-8">
               {step.number}

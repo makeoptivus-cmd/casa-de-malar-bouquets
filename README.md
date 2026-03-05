@@ -22,6 +22,8 @@ npm run dev
 
 This app uses Supabase for data (portfolio items, reviews, and image storage). See `SUPABASE_SETUP.md` for setup and SQL.
 
+For the upgraded Admin panel fields (unique 4-digit code, price, key feature, up to 4 images, optional video), run `SUPABASE_PORTFOLIO_UPGRADE.sql` in your Supabase SQL editor.
+
 ## Deployment
 
 Deploy to Vercel or Netlify — this is a standard Vite React app. Update environment variables in your deployment platform to match `.env.local`.
