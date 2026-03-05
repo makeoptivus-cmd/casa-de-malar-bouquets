@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
   useMotionValueEvent,
@@ -10,10 +10,20 @@ import {
 // Balanced scroll track so the whole sequence plays in about two swipes.
 const HERO_SCROLL_VH = 200;
 const HERO_SEQUENCE_FRAMES = 226;
+const DARK_TEXT_AFTER_FRAME = 195;
+const FRAME_EASE = 0.18;
+
+const getFrameSrc = (frame: number) => `/images/transformer-sequence/${frame}.jpg`;
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [frameIndex, setFrameIndex] = useState(1);
+  const targetProgressRef = useRef(0);
+  const smoothProgressRef = useRef(0);
+  const isAnimatingRef = useRef(false);
+  const preloadedFramesRef = useRef<Set<number>>(new Set());
+  const rafRef = useRef<number | null>(null);
+  const [currentFrame, setCurrentFrame] = useState(1);
+  const [useDarkText, setUseDarkText] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -21,35 +31,100 @@ const HeroSection = () => {
     offset: ["start start", "end end"],
   });
 
-  // Tie scroll progress to sequence frame so the hero visibly reacts while scrolling.
+  // Load frame 1 immediately, then progressively preload the rest in small chunks.
+  useEffect(() => {
+    let frame = 1;
+    let cancelled = false;
+
+    const preloadChunk = () => {
+      if (cancelled || frame > HERO_SEQUENCE_FRAMES) return;
+
+      for (let i = 0; i < 12 && frame <= HERO_SEQUENCE_FRAMES; i += 1) {
+        if (!preloadedFramesRef.current.has(frame)) {
+          const img = new Image();
+          img.decoding = "async";
+          img.src = getFrameSrc(frame);
+          preloadedFramesRef.current.add(frame);
+        }
+        frame += 1;
+      }
+
+      window.setTimeout(preloadChunk, 16);
+    };
+
+    preloadChunk();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const animateToTargetFrame = () => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+
+    const tick = () => {
+      const target = targetProgressRef.current;
+      const current = smoothProgressRef.current;
+      const delta = target - current;
+      const nextProgress = Math.abs(delta) < 0.0005 ? target : current + delta * FRAME_EASE;
+      smoothProgressRef.current = nextProgress;
+
+      const nextFrame = Math.min(
+        HERO_SEQUENCE_FRAMES,
+        Math.max(1, Math.round(nextProgress * (HERO_SEQUENCE_FRAMES - 1)) + 1)
+      );
+
+      setCurrentFrame((prev) => (prev === nextFrame ? prev : nextFrame));
+
+      const shouldUseDarkText = nextFrame > DARK_TEXT_AFTER_FRAME;
+      setUseDarkText((prev) => (prev === shouldUseDarkText ? prev : shouldUseDarkText));
+
+      if (Math.abs(targetProgressRef.current - smoothProgressRef.current) < 0.0005) {
+        isAnimatingRef.current = false;
+        rafRef.current = null;
+        return;
+      }
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+  };
+
+  // Smoothly converge toward the latest scroll progress to avoid visible frame jumping.
   useMotionValueEvent(scrollYProgress, "change", (latestProgress) => {
-    const nextFrame = Math.min(
-      HERO_SEQUENCE_FRAMES,
-      Math.max(1, Math.round(latestProgress * (HERO_SEQUENCE_FRAMES - 1)) + 1)
-    );
-    setFrameIndex((previousFrame) => (previousFrame === nextFrame ? previousFrame : nextFrame));
+    targetProgressRef.current = Math.min(1, Math.max(0, latestProgress));
+    animateToTargetFrame();
   });
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
 
   const bgYRaw = useTransform(scrollYProgress, [0, 1], [0, -90]);
   const bgScaleRaw = useTransform(scrollYProgress, [0, 1], [1.16, 1.05]);
   const textYRaw = useTransform(scrollYProgress, [0, 1], [0, -34]);
 
-  const spring = { stiffness: 90, damping: 30, mass: 0.9 };
+  const spring = { stiffness: 70, damping: 28, mass: 1 };
   const bgY = useSpring(bgYRaw, spring);
   const bgScale = useSpring(bgScaleRaw, spring);
   const textY = useSpring(textYRaw, spring);
-  const useDarkText = frameIndex > 195;
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: `${HERO_SCROLL_VH}vh` }}>
       <div className="sticky top-0 h-screen overflow-hidden bg-white">
         <motion.div className="absolute inset-0 will-change-transform" style={{ y: bgY, scale: bgScale }}>
           <img
-            src={`/images/transformer-sequence/${frameIndex}.jpg`}
+            src={getFrameSrc(currentFrame)}
             alt="Bouquet hero"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
             loading="eager"
             fetchPriority="high"
+            decoding="async"
           />
         </motion.div>
 

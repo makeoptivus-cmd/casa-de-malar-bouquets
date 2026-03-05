@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { PortfolioItem } from '@/lib/supabase';
 
 export interface CartItem extends PortfolioItem {
@@ -16,9 +16,39 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+const CART_STORAGE_KEY = 'casa-de-malar-cart';
+
+const getInitialCartItems = (): CartItem[] => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const saved = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+
+    // Keep only minimally valid items to avoid runtime issues from stale/corrupt storage.
+    return parsed.filter(
+      (item): item is CartItem =>
+        item &&
+        typeof item.id === 'string' &&
+        typeof item.name === 'string' &&
+        typeof item.quantity === 'number' &&
+        item.quantity > 0
+    );
+  } catch {
+    return [];
+  }
+};
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCartItems);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const addToCart = (item: PortfolioItem) => {
     setCartItems((prev) => {
